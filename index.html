@@ -25,41 +25,39 @@
         OneSignal.init({
             appId: "f69ee07c-2405-4210-a18f-c6842db4c294",
             safari_web_id: "web.onesignal.auto.10bba952-d3e6-4be7-b269-bd5caae877a4",
-            notifyButton: { enable: !localStorage.getItem("subscribedToNotifications") }, // Show only if not subscribed
-            allowLocalhostAsSecureOrigin: true,
-            autoResubscribe: true
+            notifyButton: {
+                enable: true // Show bell icon for Android/PC to prompt subscription
+            },
+            allowLocalhostAsSecureOrigin: true, // For local testing
+            autoResubscribe: true // Automatically resubscribe users if they clear cache
         });
 
-        // Check if the user is subscribed
-        OneSignal.push(async function() {
-            try {
-                const isSubscribed = await OneSignal.User.PushSubscription.isOptedIn();
-                if (isSubscribed) {
-                    console.log("User is subscribed. Hiding bell...");
-                    localStorage.setItem("subscribedToNotifications", "true"); // Store subscription state
-                    hideNotificationBell();
-                }
-            } catch (err) {
-                console.error("Error checking subscription:", err);
+        // Enable verbose logging for debugging
+        OneSignal.log.setLevel('trace');
+
+        // Check subscription status and hide bell if subscribed
+        OneSignal.User.PushSubscription.getPushSubscription().then(sub => {
+            if (sub.optedIn) {
+                console.log("User is subscribed! ID:", sub.id);
+                // Hide the bell icon after successful subscription
+                OneSignal.notifyButton.hide();
+            } else {
+                console.log("User is not subscribed. Opted in:", sub.optedIn);
+                console.log("Subscription details:", sub);
+            }
+        }).catch(err => {
+            console.error("Error checking subscription:", err);
+        });
+
+        // Listen for subscription changes and hide bell if user subscribes
+        OneSignal.User.PushSubscription.on('change', (subscription) => {
+            if (subscription.optedIn) {
+                console.log("Subscription changed: User is now subscribed! ID:", subscription.id);
+                OneSignal.notifyButton.hide();
             }
         });
 
-        // Listen for subscription changes
-        OneSignal.User.PushSubscription.addEventListener("change", function(event) {
-            if (event.current.optedIn) {
-                console.log("User just subscribed! Hiding bell permanently...");
-                localStorage.setItem("subscribedToNotifications", "true"); // Store it
-                hideNotificationBell();
-            }
-        });
-
-        function hideNotificationBell() {
-            setTimeout(() => {
-                document.querySelectorAll(".onesignal-bell-container, #onesignal-bell-container").forEach(el => el.remove());
-            }, 500);
-        }
-
-        // iOS PWA installation prompt
+        // Nudge iOS users to install PWA
         if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream && !navigator.standalone) {
             setTimeout(() => {
                 alert("Yo, fam! Add Chawp to your Home Screen for notifications. Tap Share > 'Add to Home Screen'.");
@@ -67,7 +65,6 @@
         }
     });
 </script>
-
 
 
 
