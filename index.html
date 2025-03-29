@@ -35,28 +35,26 @@
         // Enable verbose logging for debugging
         OneSignal.log.setLevel('trace');
 
-        // Check subscription status
-        OneSignal.User.PushSubscription.getPushSubscription().then(sub => {
-            if (sub.optedIn) {
-                console.log("User  is subscribed! ID:", sub.id);
-                // Hide the notification button if the user is subscribed
-                OneSignal.showNativePrompt(); // This will show the prompt if not already shown
-                OneSignal.push(() => {
-                    OneSignal.getNotificationPermission().then(permission => {
-                        if (permission === 'granted') {
-                            OneSignal.setNotificationButton({ enable: false }); // Hide the button
+        // Check subscription status and remove bell if subscribed
+        OneSignal.push(function() {
+            OneSignal.Notifications.isPushSupported().then(function(isSupported) {
+                if (isSupported) {
+                    OneSignal.User.PushSubscription.isOptedIn().then(function(isSubscribed) {
+                        if (isSubscribed) {
+                            console.log("User is subscribed!");
+                            OneSignal.Notifications.hidePrompt(); // Hide subscription prompt
+                            setTimeout(() => {
+                                document.querySelector(".onesignal-bell-container")?.remove(); // Remove bell icon
+                            }, 2000);
+                        } else {
+                            console.log("User is not subscribed.");
                         }
-                    });
-                });
-            } else {
-                console.log("User  is not subscribed. Opted in:", sub.optedIn);
-                console.log("Subscription details:", sub);
-            }
-        }).catch(err => {
-            console.error("Error checking subscription:", err);
+                    }).catch(err => console.error("Error checking subscription:", err));
+                }
+            });
         });
 
-        // Nudge iOS users to install PWA
+        // iOS PWA installation prompt
         if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream && !navigator.standalone) {
             setTimeout(() => {
                 alert("Yo, fam! Add Chawp to your Home Screen for notifications. Tap Share > 'Add to Home Screen'.");
@@ -64,6 +62,7 @@
         }
     });
 </script>
+
 
     <style>
         body {background:#2c2c2c;font-family:'Poppins', sans-serif;color:#fff;overflow-x:hidden;}
