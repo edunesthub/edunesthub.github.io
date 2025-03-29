@@ -25,33 +25,37 @@
         OneSignal.init({
             appId: "f69ee07c-2405-4210-a18f-c6842db4c294",
             safari_web_id: "web.onesignal.auto.10bba952-d3e6-4be7-b269-bd5caae877a4",
-            notifyButton: { enable: true },
+            notifyButton: { enable: true }, // Show bell initially
             allowLocalhostAsSecureOrigin: true,
             autoResubscribe: true
         });
 
-        // Check subscription status and nuke the bell if needed
+        // Check subscription status and hide the bell if already subscribed
         OneSignal.push(async function() {
             try {
                 const isSubscribed = await OneSignal.User.PushSubscription.isOptedIn();
                 if (isSubscribed) {
-                    console.log("User is subscribed! Removing bell...");
-                    OneSignal.Notifications.hidePrompt(); // Hide subscription prompt
-                    setTimeout(() => {
-                        document.querySelectorAll(".onesignal-bell-container, #onesignal-bell-container").forEach(el => el.remove());
-                    }, 500);
-                } else {
-                    console.log("User is NOT subscribed.");
+                    console.log("User is already subscribed. Hiding bell...");
+                    hideNotificationBell();
                 }
             } catch (err) {
                 console.error("Error checking subscription:", err);
             }
         });
 
-        // Kill the bell immediately on page load (backup nuke)
-        setTimeout(() => {
-            document.querySelectorAll(".onesignal-bell-container, #onesignal-bell-container").forEach(el => el.remove());
-        }, 2000);
+        // Event listener for when a user subscribes
+        OneSignal.User.PushSubscription.addEventListener("change", function(event) {
+            if (event.current.optedIn) {
+                console.log("User just subscribed! Removing bell...");
+                hideNotificationBell();
+            }
+        });
+
+        function hideNotificationBell() {
+            setTimeout(() => {
+                document.querySelectorAll(".onesignal-bell-container, #onesignal-bell-container").forEach(el => el.remove());
+            }, 500);
+        }
 
         // iOS PWA installation prompt
         if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream && !navigator.standalone) {
@@ -61,6 +65,7 @@
         }
     });
 </script>
+
 
 
 
