@@ -20,26 +20,41 @@
 <!-- OneSignal Init -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
+   window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(function(OneSignal) {
     OneSignal.init({
         appId: "f69ee07c-2405-4210-a18f-c6842db4c294",
         safari_web_id: "web.onesignal.auto.10bba952-d3e6-4be7-b269-bd5caae877a4",
-        notifyButton: { enable: true },
+        notifyButton: { enable: true }, // Start enabled
         allowLocalhostAsSecureOrigin: true,
         autoResubscribe: true
     });
 
-    // Enable verbose logging for debugging
-    OneSignal.log.setLevel('trace');
+    // Hide the bell immediately if already subscribed
+    if (localStorage.getItem("onesignal_subscribed") === "true") {
+        console.log("User already subscribed. Removing bell...");
+        OneSignal.setNotificationButton({ enable: false });
+        removeNotificationBell();
+    }
+
+    function removeNotificationBell() {
+        setTimeout(() => {
+            const bell = document.querySelector(".onesignal-bell-container");
+            if (bell) {
+                bell.style.display = "none";
+                console.log("🔔 Notification bell successfully removed.");
+            }
+        }, 1000); // Delay to ensure OneSignal loads first
+    }
 
     function updateSubscriptionUI(isSubscribed) {
         if (isSubscribed) {
             localStorage.setItem("onesignal_subscribed", "true");
-            OneSignal.setNotificationButton({ enable: false }); // Hide the button
+            OneSignal.setNotificationButton({ enable: false }); // Hide via API
+            removeNotificationBell(); // Ensure it's gone
         } else {
             localStorage.removeItem("onesignal_subscribed");
-            OneSignal.setNotificationButton({ enable: true }); // Show the button
+            OneSignal.setNotificationButton({ enable: true }); // Show if unsubscribed
         }
     }
 
@@ -55,6 +70,8 @@ OneSignalDeferred.push(function(OneSignal) {
         OneSignal.User.PushSubscription.addEventListener('change', checkSubscription);
         checkSubscription();
     });
+
+
 
     // Nudge iOS users to install PWA
     if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream && !navigator.standalone) {
