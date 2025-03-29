@@ -69,7 +69,7 @@ self.addEventListener("push", event => {
         icon: "/img/icon-192x192.png",
         badge: "/img/fav.png",
         vibrate: [200, 100, 200],
-        data: { url: data.url || "/index.html" }
+        data: { url: data.url || "https://chawp.me/index.html" }
     };
 
     event.waitUntil(self.registration.showNotification(title, options));
@@ -77,7 +77,7 @@ self.addEventListener("push", event => {
 
 self.addEventListener("notificationclick", event => {
     event.notification.close();
-    const url = event.notification.data.url || "/index.html";
+    const url = event.notification.data.url || "https://chawp.me/index.html";
 
     event.waitUntil(
         clients.matchAll({ type: "window", includeUncontrolled: true })
