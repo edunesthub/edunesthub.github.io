@@ -1,4 +1,6 @@
-const CACHE_NAME = "Chawp-cache-v2";
+importScripts("https://cdn.onesignal.com/sdks/OneSignalSDK.js");
+
+const CACHE_NAME = "Chawp-cache-v3";
 const urlsToCache = [
     "/",
     "/index.html",
@@ -17,6 +19,7 @@ const urlsToCache = [
     "/manifest.json"
 ];
 
+// Install event - Cache assets
 self.addEventListener("install", event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
@@ -25,6 +28,7 @@ self.addEventListener("install", event => {
     );
 });
 
+// Activate event - Delete old caches
 self.addEventListener("activate", event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
@@ -36,31 +40,30 @@ self.addEventListener("activate", event => {
     );
 });
 
+// Fetch event - Serve from cache, then fetch & update cache
 self.addEventListener("fetch", event => {
     event.respondWith(
         caches.match(event.request)
-            .then(response => {
-                if (response) return response;
-                return fetch(event.request)
-                    .then(response => {
-                        if (!response || response.status !== 200 || response.type !== "basic") {
-                            return response;
-                        }
-                        const responseToCache = response.clone();
-                        caches.open(CACHE_NAME)
-                            .then(cache => cache.put(event.request, responseToCache));
-                        return response;
+            .then(response => response || fetch(event.request)
+                .then(fetchResponse => {
+                    if (!fetchResponse || fetchResponse.status !== 200 || fetchResponse.type !== "basic") {
+                        return fetchResponse;
+                    }
+                    const responseToCache = fetchResponse.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseToCache);
                     });
-            })
-            .catch(() => caches.match("/index.html"))
+                    return fetchResponse;
+                })
+            ).catch(() => caches.match("/index.html"))
     );
 });
 
-// OneSignal Push Handling
+// Push Notification Event - Handle OneSignal notifications
 self.addEventListener("push", event => {
     let data = {};
     if (event.data) {
-        data = event.data.json(); // OneSignal sends JSON
+        data = event.data.json();
     }
 
     const title = data.headings?.en || "Chawp Update";
@@ -75,6 +78,7 @@ self.addEventListener("push", event => {
     event.waitUntil(self.registration.showNotification(title, options));
 });
 
+// Notification Click Event - Open the correct URL
 self.addEventListener("notificationclick", event => {
     event.notification.close();
     const url = event.notification.data.url || "https://chawp.me/index.html";
