@@ -38,9 +38,18 @@
         // Check subscription status
         OneSignal.User.PushSubscription.getPushSubscription().then(sub => {
             if (sub.optedIn) {
-                console.log("User is subscribed! ID:", sub.id);
+                console.log("User  is subscribed! ID:", sub.id);
+                // Hide the notification button if the user is subscribed
+                OneSignal.showNativePrompt(); // This will show the prompt if not already shown
+                OneSignal.push(() => {
+                    OneSignal.getNotificationPermission().then(permission => {
+                        if (permission === 'granted') {
+                            OneSignal.setNotificationButton({ enable: false }); // Hide the button
+                        }
+                    });
+                });
             } else {
-                console.log("User is not subscribed. Opted in:", sub.optedIn);
+                console.log("User  is not subscribed. Opted in:", sub.optedIn);
                 console.log("Subscription details:", sub);
             }
         }).catch(err => {
