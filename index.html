@@ -25,73 +25,13 @@
         OneSignal.init({
             appId: "f69ee07c-2405-4210-a18f-c6842db4c294",
             safari_web_id: "web.onesignal.auto.10bba952-d3e6-4be7-b269-bd5caae877a4",
-            notifyButton: {
-                enable: true // Show bell icon for Android/PC to prompt subscription
-            },
             allowLocalhostAsSecureOrigin: true, // For local testing
             autoResubscribe: true // Automatically resubscribe users if they clear cache
+            // Removed notifyButton to disable the bell icon
         });
 
         // Enable verbose logging for debugging
         OneSignal.log.setLevel('trace');
-
-        // Function to hide the bell icon
-        function hideBellIcon() {
-            // Try OneSignal's built-in hide method
-            OneSignal.notifyButton.hide();
-
-            // Fallback: Hide the bell via DOM manipulation
-            const bellElement = document.querySelector('.OneSignal-bell-launcher');
-            if (bellElement) {
-                bellElement.style.display = 'none';
-            }
-
-            // Persist the hidden state in localStorage
-            localStorage.setItem('chawpBellHidden', 'true');
-        }
-
-        // Function to check if the bell should be hidden
-        function shouldHideBell() {
-            return localStorage.getItem('chawpBellHidden') === 'true';
-        }
-
-        // Wait for OneSignal to fully initialize before checking subscription
-        OneSignal.on('initDone', () => {
-            // Check if we should hide the bell based on localStorage
-            if (shouldHideBell()) {
-                hideBellIcon();
-                return;
-            }
-
-            // Check subscription status
-            OneSignal.User.PushSubscription.getPushSubscription().then(sub => {
-                if (sub.optedIn) {
-                    console.log("User is subscribed! ID:", sub.id);
-                    hideBellIcon();
-                } else {
-                    console.log("User is not subscribed. Opted in:", sub.optedIn);
-                    console.log("Subscription details:", sub);
-                }
-            }).catch(err => {
-                console.error("Error checking subscription:", err);
-            });
-
-            // Listen for subscription changes
-            OneSignal.User.PushSubscription.on('change', (subscription) => {
-                if (subscription.optedIn) {
-                    console.log("Subscription changed: User is now subscribed! ID:", subscription.id);
-                    hideBellIcon();
-                } else {
-                    console.log("User unsubscribed. Showing bell again.");
-                    // If user unsubscribes, show the bell again
-                    localStorage.removeItem('chawpBellHidden');
-                    const bellElement = document.querySelector('.OneSignal-bell-launcher');
-                    if (bellElement) {
-                        bellElement.style.display = 'block';
-                    }
-                }
-            });
-        });
 
         // Nudge iOS users to install PWA
         if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream && !navigator.standalone) {
@@ -150,10 +90,62 @@
             .promo-banner p {font-size:0.9rem;}
         }
         .bg-darks {background:#1a1a1a;color:#00c8ff;}
+        .subscription-prompt {
+    margin: 25px 15px;
+    padding: 20px;
+    background: #565656;
+    border-radius: 15px;
+    text-align: center;
+    color: #fff;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+    transition: opacity 0.5s ease;
+    opacity: 0;
+}
+.subscription-prompt.loaded {
+    opacity: 1;
+}
+.subscription-prompt h3 {
+    font-size: 1.5rem;
+    margin: 0;
+    color: #00c8ff;
+    font-weight: 700;
+}
+.subscription-prompt p {
+    font-size: 1rem;
+    margin: 8px 0;
+    opacity: 0.9;
+    font-weight: 400;
+    color: #b0b0b0;
+}
+.subscription-prompt button {
+    background: #00c8ff;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 5px;
+    font-weight: 600;
+}
+.subscription-prompt button:hover {
+    background: #00b0e6;
+}
+.subscription-prompt .dismiss-btn {
+    background: #4a4a4a;
+}
+.subscription-prompt .dismiss-btn:hover {
+    background: #5a5a5a;
+}
     </style>
 </head>
 <body class="fixed-bottom-bar">
     <div class="osahan-home-page">
+        <div class="subscription-prompt" id="subscriptionPrompt">
+            <h3>Stay in the Loop, Fam! 🔥</h3>
+            <p>Enable notifications to get the latest deals and updates.</p>
+            <button onclick="subscribeToNotifications()">Turn On Notifications</button>
+            <button onclick="dismissPrompt()" class="dismiss-btn">Not Now</button>
+        </div>
         <div class="welcome-header">
             <div class="title d-flex align-items-center justify-content-center">
                 <h1 id="welcome-message">Hi!</h1>
@@ -339,6 +331,88 @@
                 setTimeout(() => document.querySelector(".trending-section").classList.add("loaded"), 50);
             }
         });
+
+        // Function to check if user is subscribed
+async function checkSubscriptionStatus() {
+    const OneSignal = window.OneSignal;
+    const sub = await OneSignal.User.PushSubscription.getPushSubscription();
+    return sub.optedIn;
+}
+
+// Function to prompt user to subscribe
+window.subscribeToNotifications = async function() {
+    const OneSignal = window.OneSignal;
+    try {
+        // Request permission and subscribe
+        await OneSignal.User.PushSubscription.optIn();
+        const isSubscribed = await checkSubscriptionStatus();
+        if (isSubscribed) {
+            console.log("User subscribed successfully!");
+            hideSubscriptionPrompt();
+        } else {
+            console.log("User did not subscribe.");
+        }
+    } catch (error) {
+        console.error("Error subscribing to notifications:", error);
+    }
+};
+
+// Function to hide the subscription prompt
+function hideSubscriptionPrompt() {
+    const prompt = document.getElementById("subscriptionPrompt");
+    if (prompt) {
+        prompt.style.display = 'none';
+    }
+    // Persist the hidden state in localStorage
+    localStorage.setItem('chawpPromptHidden', 'true');
+}
+
+// Function to check if the prompt should be hidden
+function shouldHidePrompt() {
+    return localStorage.getItem('chawpPromptHidden') === 'true';
+}
+
+// Function to dismiss the prompt without subscribing
+window.dismissPrompt = function() {
+    hideSubscriptionPrompt();
+};
+
+// Update DOMContentLoaded to handle the prompt
+document.addEventListener("DOMContentLoaded", async () => {
+    loadTrendingRestaurants();
+    updateWelcomeMessage();
+
+    setTimeout(() => {
+        document.querySelector(".welcome-header").classList.add("loaded");
+        document.querySelector(".promo-banner").classList.add("loaded");
+        document.querySelector(".osahan-menu-fotter").classList.add("loaded");
+        document.querySelector(".subscription-prompt")?.classList.add("loaded");
+    }, 50);
+
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/service-worker.js")
+            .then(() => console.log("PWA Ready, fam!"))
+            .catch(error => console.error("PWA Error:", error));
+    }
+
+    // Check subscription status and hide prompt if already subscribed
+    const OneSignal = window.OneSignal;
+    OneSignal.on('initDone', async () => {
+        const isSubscribed = await checkSubscriptionStatus();
+        if (isSubscribed || shouldHidePrompt()) {
+            hideSubscriptionPrompt();
+        }
+
+        // Listen for subscription changes
+        OneSignal.User.PushSubscription.on('change', async (subscription) => {
+            if (subscription.optedIn) {
+                console.log("Subscription changed: User is now subscribed! ID:", subscription.id);
+                hideSubscriptionPrompt();
+            }
+        });
+    });
+});
+
     </script>
 </body>
 </html>
