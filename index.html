@@ -25,17 +25,18 @@
         OneSignal.init({
             appId: "f69ee07c-2405-4210-a18f-c6842db4c294",
             safari_web_id: "web.onesignal.auto.10bba952-d3e6-4be7-b269-bd5caae877a4",
-            notifyButton: { enable: true }, // Show bell initially
+            notifyButton: { enable: !localStorage.getItem("subscribedToNotifications") }, // Show only if not subscribed
             allowLocalhostAsSecureOrigin: true,
             autoResubscribe: true
         });
 
-        // Check subscription status and hide the bell if already subscribed
+        // Check if the user is subscribed
         OneSignal.push(async function() {
             try {
                 const isSubscribed = await OneSignal.User.PushSubscription.isOptedIn();
                 if (isSubscribed) {
-                    console.log("User is already subscribed. Hiding bell...");
+                    console.log("User is subscribed. Hiding bell...");
+                    localStorage.setItem("subscribedToNotifications", "true"); // Store subscription state
                     hideNotificationBell();
                 }
             } catch (err) {
@@ -43,10 +44,11 @@
             }
         });
 
-        // Event listener for when a user subscribes
+        // Listen for subscription changes
         OneSignal.User.PushSubscription.addEventListener("change", function(event) {
             if (event.current.optedIn) {
-                console.log("User just subscribed! Removing bell...");
+                console.log("User just subscribed! Hiding bell permanently...");
+                localStorage.setItem("subscribedToNotifications", "true"); // Store it
                 hideNotificationBell();
             }
         });
