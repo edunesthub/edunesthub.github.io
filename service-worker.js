@@ -1,8 +1,12 @@
-const CACHE_NAME = "chawmp-cache-v2";
+const CACHE_NAME = "Chawp-cache-v2";
 const urlsToCache = [
     "/",
     "/index.html",
     "/cart.html",
+    "/home.html",
+    "/orders.html",
+    "/profile.html",
+    "/contact-us.html",
     "/vendor/bootstrap/css/bootstrap.min.css",
     "/vendor/slick/slick/slick.css",
     "/vendor/slick/slick/slick-theme.css",
@@ -59,7 +63,7 @@ self.addEventListener("push", event => {
         data = event.data.json(); // OneSignal sends JSON
     }
 
-    const title = data.headings?.en || "Chawmp Update";
+    const title = data.headings?.en || "Chawp Update";
     const options = {
         body: data.contents?.en || "Something new, fam!",
         icon: "/img/icon-192x192.png",

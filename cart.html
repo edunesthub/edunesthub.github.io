@@ -6,7 +6,7 @@
     <meta name="description" content="Askbootstrap">
     <meta name="author" content="Askbootstrap">
     <link rel="icon" type="image/png" href="img/fav.png">
-    <title>Chawmp - Your Cart</title>
+    <title>Chawp - Your Cart</title>
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="vendor/icons/feather.css" rel="stylesheet" type="text/css">
     <script defer src="https://js.paystack.co/v1/inline.js"></script>
@@ -262,7 +262,7 @@
             const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0) + 5;
             PaystackPop.setup({
                 key: PAYSTACK_PUBLIC_KEY,
-                email: "chawmpgh@gmail.com",
+                email: "Chawpgh@gmail.com",
                 amount: totalAmount * 100,
                 currency: "GHS",
                 ref: "TXN_" + Date.now(),
