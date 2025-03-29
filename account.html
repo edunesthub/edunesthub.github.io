@@ -17,6 +17,21 @@
     <link href="css/style.css" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
 
+    <!-- OneSignal Init -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(function(OneSignal) {
+            OneSignal.init({
+                appId: "f69ee07c-2405-4210-a18f-c6842db4c294",
+                safari_web_id: "web.onesignal.auto.10bba952-d3e6-4be7-b269-bd5caae877a4",
+                allowLocalhostAsSecureOrigin: true,
+                autoResubscribe: true
+            });
+            OneSignal.log.setLevel('trace');
+        });
+    </script>
+
     <style>
         body { background: #2c2c2c; font-family: 'Poppins', sans-serif; color: #fff; }
         .account-page { padding: 40px 20px; max-width: 600px; margin: 0 auto; }
@@ -38,8 +53,14 @@
         .btn-danger:hover { background: #c82333; }
         .options-section { margin-top: 30px; }
         .options-section h5 { color: #fff; font-weight: 600; margin-bottom: 15px; font-size: 1.2rem; }
-        .motivational-btn { background: #565656; border: 1px solid #00c8ff; color: #00c8ff; padding: 12px; border-radius: 10px; font-size: 1rem; font-weight: 600; width: 100%; transition: all 0.3s ease; margin-top: 20px; }
-        .motivational-btn:hover { background: #00c8ff; color: #fff; }
+        .notification-settings { margin-top: 20px; padding: 15px; background: #4a4a4a; border-radius: 10px; }
+        .notification-settings p { font-size: 1rem; color: #fff; margin: 0 0 15px; font-weight: 500; }
+        .notification-buttons { display: flex; gap: 10px; }
+        .notification-btn { flex: 1; padding: 10px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .turn-on-btn { background: #00c8ff; border: none; color: #fff; }
+        .turn-on-btn:hover { background: #00b0e6; }
+        .turn-off-btn { background: #6c757d; border: none; color: #fff; }
+        .turn-off-btn:hover { background: #5a6268; }
         .osahan-menu-fotter { background: #1a1a1a; box-shadow: 0 -4px 15px rgba(0,0,0,0.3); }
     </style>
 </head>
@@ -66,7 +87,13 @@
                 <button type="submit" class="btn btn-primary">Save Changes</button>
                 <button type="button" id="back-btn" class="btn btn-secondary mt-3">Back to Profile</button>
             </form>
-            <button class="motivational-btn" onclick="subscribeToQuotes()">Click Here to Receive Daily Motivational Quotes</button>
+            <div class="notification-settings">
+                <p>Want to stay updated?</p>
+                <div class="notification-buttons">
+                    <button class="notification-btn turn-on-btn" onclick="turnOnNotifications()">Turn On</button>
+                    <button class="notification-btn turn-off-btn" onclick="turnOffNotifications()">Turn Off</button>
+                </div>
+            </div>
             <div class="options-section">
                 <h5>Account Options</h5>
                 <button id="delete-account-btn" class="btn btn-danger">Delete Account</button>
@@ -163,7 +190,7 @@
 
             try {
                 const userDocRef = doc(db, "users", user.uid);
-                await setDoc(userDocRef, updatedData, { merge: true });
+                await setDoc(userDocRef, updatedData, {clause: true });
                 const cachedData = JSON.parse(localStorage.getItem(`${CACHE_KEY}-${user.uid}`)) || {};
                 localStorage.setItem(`${CACHE_KEY}-${user.uid}`, JSON.stringify({ ...cachedData, ...updatedData }));
                 window.location.href = "profile.html";
@@ -195,10 +222,61 @@
             }
         });
 
-        window.subscribeToQuotes = function() {
-            // Placeholder for motivational quotes subscription logic
-            alert("You’ve subscribed to daily motivational quotes! Stay tuned for inspiration.");
-            // You could integrate with OneSignal or Firestore here to manage subscriptions
+        async function checkSubscriptionStatus() {
+            const OneSignal = window.OneSignalDeferred[0];
+            if (!OneSignal) return false;
+            try {
+                const sub = await OneSignal.User.PushSubscription.getPushSubscription();
+                return sub?.optedIn || false;
+            } catch (error) {
+                console.error("Error checking subscription status:", error);
+                return false;
+            }
+        }
+
+        window.turnOnNotifications = async function() {
+            const OneSignal = window.OneSignalDeferred[0];
+            if (!OneSignal) {
+                alert("Notification service not ready. Try again later.");
+                return;
+            }
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === "granted") {
+                    await OneSignal.User.PushSubscription.optIn();
+                    const isSubscribed = await checkSubscriptionStatus();
+                    if (isSubscribed) {
+                        alert("Notifications turned on successfully!");
+                    } else {
+                        alert("Failed to turn on notifications. Try again.");
+                    }
+                } else if (permission === "denied") {
+                    alert("Notifications blocked. Enable them in your browser settings.");
+                }
+            } catch (error) {
+                console.error("Error turning on notifications:", error);
+                alert("Failed to turn on notifications. Check your browser settings.");
+            }
+        };
+
+        window.turnOffNotifications = async function() {
+            const OneSignal = window.OneSignalDeferred[0];
+            if (!OneSignal) {
+                alert("Notification service not ready. Try again later.");
+                return;
+            }
+            try {
+                await OneSignal.User.PushSubscription.optOut();
+                const isSubscribed = await checkSubscriptionStatus();
+                if (!isSubscribed) {
+                    alert("Notifications turned off successfully!");
+                } else {
+                    alert("Failed to turn off notifications. Try again.");
+                }
+            } catch (error) {
+                console.error("Error turning off notifications:", error);
+                alert("Failed to turn off notifications. Try again.");
+            }
         };
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -216,4 +294,5 @@
     <script defer src="vendor/jquery/jquery.min.js"></script>
     <script defer src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 </body>
+</html>nt.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
