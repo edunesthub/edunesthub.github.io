@@ -20,56 +20,19 @@
 
 
     <!-- OneSignal Init -->
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-   window.OneSignalDeferred = window.OneSignalDeferred || [];
-OneSignalDeferred.push(function(OneSignal) {
-    OneSignal.init({
-        appId: "f69ee07c-2405-4210-a18f-c6842db4c294",
-        safari_web_id: "web.onesignal.auto.10bba952-d3e6-4be7-b269-bd5caae877a4",
-        notifyButton: { enable: true }, // Start enabled
-        allowLocalhostAsSecureOrigin: true,
-        autoResubscribe: true
-    });
-
-    function removeNotificationBellPermanently() {
-        setTimeout(() => {
-            const bell = document.querySelector(".onesignal-bell-container");
-            if (bell) {
-                bell.remove(); // Completely(backticks) Completely remove the bell from the DOM
-                console.log("🔔 Notification bell permanently removed.");
-            }
-        }, 1000); // Delay to ensure OneSignal loads first
-    }
-
-    // Check initial subscription state and remove bell if subscribed
-    if (localStorage.getItem("onesignal_subscribed") === "true") {
-        console.log("User already subscribed. Removing bell...");
-        removeNotificationBellPermanently();
-    }
-
-    // Monitor subscription changes
-    OneSignal.push(() => {
-        OneSignal.User.PushSubscription.addEventListener('change', (subscription) => {
-            if (subscription.optedIn) {
-                localStorage.setItem("onesignal_subscribed", "true");
-                console.log("User subscribed. Removing bell...");
-                removeNotificationBellPermanently();
-            }
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "f69ee07c-2405-4210-a18f-c6842db4c294",
+          safari_web_id: "web.onesignal.auto.10bba952-d3e6-4be7-b269-bd5caae877a4",
+          notifyButton: {
+            enable: true,
+          },
         });
-
-        // Initial check on load
-        OneSignal.User.PushSubscription.getPushSubscription().then(sub => {
-            if (sub && sub.optedIn) {
-                localStorage.setItem("onesignal_subscribed", "true");
-                removeNotificationBellPermanently();
-            }
-        }).catch(err => {
-            console.error("Error checking subscription:", err);
-        });
-    });
-});
-</script>
+      });
+    </script>
 
 
     <style>
