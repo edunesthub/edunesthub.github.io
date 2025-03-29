@@ -26,8 +26,15 @@
             appId: "f69ee07c-2405-4210-a18f-c6842db4c294",
             safari_web_id: "web.onesignal.auto.10bba952-d3e6-4be7-b269-bd5caae877a4",
             notifyButton: {
-                enable: true // Show bell icon for Android/PC to prompt subscription
+                enable: true // Show bell icon initially
             },
+            displayPredicate: function() {
+                    // Only show the bell if the user is not subscribed
+                    return OneSignal.User.PushSubscription.getPushSubscription()
+                        .then(sub => !sub.optedIn);
+                }
+            },
+
             allowLocalhostAsSecureOrigin: true, // For local testing
             autoResubscribe: true // Automatically resubscribe users if they clear cache
         });
