@@ -335,50 +335,68 @@
         // Function to check if user is subscribed
 async function checkSubscriptionStatus() {
     const OneSignal = window.OneSignal;
-    const sub = await OneSignal.User.PushSubscription.getPushSubscription();
-    return sub.optedIn;
+    try {
+        const sub = await OneSignal.User.PushSubscription.getPushSubscription();
+        console.log("Subscription status:", sub.optedIn);
+        return sub.optedIn;
+    } catch (error) {
+        console.error("Error checking subscription status:", error);
+        return false;
+    }
 }
 
 // Function to prompt user to subscribe
 window.subscribeToNotifications = async function() {
     const OneSignal = window.OneSignal;
     try {
+        console.log("Attempting to subscribe...");
         // Request permission and subscribe
         await OneSignal.User.PushSubscription.optIn();
         const isSubscribed = await checkSubscriptionStatus();
+        console.log("Subscription result:", isSubscribed);
+        // Hide the prompt regardless of the outcome (user made a choice)
+        hideSubscriptionPrompt();
         if (isSubscribed) {
             console.log("User subscribed successfully!");
-            hideSubscriptionPrompt();
         } else {
-            console.log("User did not subscribe.");
+            console.log("User did not subscribe (possibly denied permission).");
         }
     } catch (error) {
         console.error("Error subscribing to notifications:", error);
+        // Hide the prompt even if there's an error (user still made a choice)
+        hideSubscriptionPrompt();
     }
 };
 
 // Function to hide the subscription prompt
 function hideSubscriptionPrompt() {
+    console.log("Hiding subscription prompt...");
     const prompt = document.getElementById("subscriptionPrompt");
     if (prompt) {
         prompt.style.display = 'none';
+    } else {
+        console.warn("Subscription prompt element not found!");
     }
     // Persist the hidden state in localStorage
     localStorage.setItem('chawpPromptHidden', 'true');
+    console.log("Prompt hidden state saved to localStorage:", localStorage.getItem('chawpPromptHidden'));
 }
 
 // Function to check if the prompt should be hidden
 function shouldHidePrompt() {
-    return localStorage.getItem('chawpPromptHidden') === 'true';
+    const isHidden = localStorage.getItem('chawpPromptHidden') === 'true';
+    console.log("Should hide prompt?", isHidden);
+    return isHidden;
 }
 
 // Function to dismiss the prompt without subscribing
 window.dismissPrompt = function() {
+    console.log("Dismissing prompt...");
     hideSubscriptionPrompt();
 };
 
 // Update DOMContentLoaded to handle the prompt
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
     loadTrendingRestaurants();
     updateWelcomeMessage();
 
@@ -398,21 +416,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Check subscription status and hide prompt if already subscribed
     const OneSignal = window.OneSignal;
     OneSignal.on('initDone', async () => {
+        console.log("OneSignal initialized.");
         const isSubscribed = await checkSubscriptionStatus();
         if (isSubscribed || shouldHidePrompt()) {
             hideSubscriptionPrompt();
+        } else {
+            console.log("User not subscribed and prompt not dismissed. Showing prompt.");
         }
 
         // Listen for subscription changes
         OneSignal.User.PushSubscription.on('change', async (subscription) => {
+            console.log("Subscription state changed:", subscription.optedIn);
             if (subscription.optedIn) {
-                console.log("Subscription changed: User is now subscribed! ID:", subscription.id);
+                console.log("User is now subscribed! ID:", subscription.id);
                 hideSubscriptionPrompt();
             }
         });
     });
 });
-
     </script>
 </body>
 </html>

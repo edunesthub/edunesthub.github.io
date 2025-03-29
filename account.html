@@ -17,6 +17,31 @@
     <link href="css/style.css" rel="stylesheet">
     <link href="vendor/sidebar/demo.css" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
+
+    <!-- OneSignal Init -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(function(OneSignal) {
+        OneSignal.init({
+            appId: "f69ee07c-2405-4210-a18f-c6842db4c294",
+            safari_web_id: "web.onesignal.auto.10bba952-d3e6-4be7-b269-bd5caae877a4",
+            allowLocalhostAsSecureOrigin: true, // For local testing
+            autoResubscribe: true // Automatically resubscribe users if they clear cache
+        });
+
+        // Enable verbose logging for debugging
+        OneSignal.log.setLevel('trace');
+
+        // Nudge iOS users to install PWA
+        if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream && !navigator.standalone) {
+            setTimeout(() => {
+                alert("Yo, fam! Add Chawp to your Home Screen for notifications. Tap Share > 'Add to Home Screen'.");
+            }, 2000);
+        }
+    });
+</script>
+
     <style>
         .account-container { padding: 50px 20px 100px; max-width: 450px; margin: 0 auto; }
         .account-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
@@ -36,6 +61,44 @@
         .options-section { margin-top: 40px; }
         .options-section h5 { color: #fff; font-weight: 600; margin-bottom: 15px; }
         html, body { -webkit-text-size-adjust: none; touch-action: manipulation; }
+        .notification-setting {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+}
+.notification-setting label {
+    font-size: 1rem;
+    color: #fff;
+    opacity: 0.9;
+}
+.notification-setting input[type="checkbox"] {
+    appearance: none;
+    width: 40px;
+    height: 20px;
+    background: #4a4a4a;
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+}
+.notification-setting input[type="checkbox"]:checked {
+    background: #007bff;
+}
+.notification-setting input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s ease;
+}
+.notification-setting input[type="checkbox"]:checked::before {
+    transform: translateX(20px);
+}
     </style>
 </head>
 <body class="fixed-bottom-bar">
@@ -61,6 +124,11 @@
             <button type="submit" class="btn btn-primary">Save Changes</button>
             <button type="button" id="back-btn" class="btn btn-secondary mt-3">Back to Profile</button>
         </form>
+
+        <div class="notification-setting mt-3">
+            <label for="notificationToggle" style="display: inline-block; margin-right: 10px;">Notifications</label>
+            <input type="checkbox" id="notificationToggle" onchange="toggleNotifications(this.checked)">
+        </div>
 
         <div class="options-section">
             <h5>Account Options</h5>
@@ -206,6 +274,98 @@
                 });
             }
         });
+
+        // Function to check if user is subscribed
+async function checkSubscriptionStatus() {
+    const OneSignal = window.OneSignal;
+    try {
+        const sub = await OneSignal.User.PushSubscription.getPushSubscription();
+        console.log("Subscription status:", sub.optedIn);
+        return sub.optedIn;
+    } catch (error) {
+        console.error("Error checking subscription status:", error);
+        return false;
+    }
+}
+
+// Function to toggle notifications (subscribe/unsubscribe)
+window.toggleNotifications = async function(isEnabled) {
+    const OneSignal = window.OneSignal;
+    try {
+        if (isEnabled) {
+            // Subscribe to notifications
+            await OneSignal.User.PushSubscription.optIn();
+            console.log("Notifications enabled!");
+        } else {
+            // Unsubscribe from notifications
+            await OneSignal.User.PushSubscription.optOut();
+            console.log("Notifications disabled!");
+            // Show the subscription prompt again if unsubscribed
+            localStorage.removeItem('chawpPromptHidden');
+            const prompt = document.getElementById("subscriptionPrompt");
+            if (prompt) {
+                prompt.style.display = 'block';
+            }
+        }
+    } catch (error) {
+        console.error("Error toggling notifications:", error);
+        alert("Failed to toggle notifications. Please try again.");
+        // Revert the toggle state if there's an error
+        document.getElementById("notificationToggle").checked = !isEnabled;
+    }
+};
+
+// Update DOMContentLoaded to set initial toggle state
+document.addEventListener("DOMContentLoaded", async () => {
+    const user = auth.currentUser;
+    if (user) {
+        loadAccountData(user);
+    } else {
+        onAuthStateChanged(auth, (user) => {
+            if (user) loadAccountData(user);
+            else window.location.href = "login.html";
+        });
+    }
+
+    // Add animation for the prompt (if prompt exists)
+    setTimeout(() => {
+        document.querySelector(".subscription-prompt")?.classList.add("loaded");
+    }, 50);
+
+    // Check subscription status and hide prompt if already subscribed (if prompt exists)
+    const OneSignal = window.OneSignal;
+    OneSignal.on('initDone', async () => {
+        const isSubscribed = await checkSubscriptionStatus();
+        if (isSubscribed || shouldHidePrompt()) {
+            hideSubscriptionPrompt();
+        }
+
+        // Set initial state of the notification toggle
+        const notificationToggle = document.getElementById("notificationToggle");
+        if (notificationToggle) {
+            notificationToggle.checked = isSubscribed;
+        }
+
+        // Listen for subscription changes
+        OneSignal.User.PushSubscription.on('change', async (subscription) => {
+            if (subscription.optedIn) {
+                console.log("Subscription changed: User is now subscribed! ID:", subscription.id);
+                hideSubscriptionPrompt();
+                // Update toggle state
+                if (notificationToggle) {
+                    notificationToggle.checked = true;
+                }
+            } else {
+                console.log("Subscription changed: User unsubscribed.");
+                // Update toggle state
+                if (notificationToggle) {
+                    notificationToggle.checked = false;
+                }
+            }
+        });
+    });
+});
+
     </script>
     <script defer src="vendor/jquery/jquery.min.js"></script>
     <script defer src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
