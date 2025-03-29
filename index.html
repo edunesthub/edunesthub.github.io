@@ -18,14 +18,38 @@
     <link href="/css/style.css" rel="stylesheet">
 
     <!-- OneSignal Init -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "f69ee07c-2405-4210-a18f-c6842db4c294",
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(function(OneSignal) {
+        OneSignal.init({
+            appId: "f69ee07c-2405-4210-a18f-c6842db4c294",
+            notifyButton: {
+                enable: true // Show bell icon for Android/PC to prompt subscription
+            },
+            allowLocalhostAsSecureOrigin: true // For local testing
+            // Note: Add safari_web_id here once you get it from OneSignal
+            // safari_web_id: "YOUR_SAFARI_WEB_ID"
+        });
+
+        // Check subscription status
+        OneSignal.User.PushSubscription.getPushSubscription().then(sub => {
+            if (sub.optedIn) {
+                console.log("User is subscribed! ID:", sub.id);
+            } else {
+                console.log("User is not subscribed. Opted in:", sub.optedIn);
+            }
+        }).catch(err => {
+            console.error("Error checking subscription:", err);
+        });
+
+        // Nudge iOS users to install PWA
+        if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream && !navigator.standalone) {
+            setTimeout(() => {
+                alert("Yo, fam! Add Chawp to your Home Screen for notifications. Tap Share > 'Add to Home Screen'.");
+            }, 2000);
+        }
     });
-  });
 </script>
 
     <style>
