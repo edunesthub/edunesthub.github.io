@@ -3,106 +3,77 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Chawp - Sleek Food Delivery">
+    <meta name="description" content="Chawmp - Sleek Food Delivery">
     <meta name="author" content="Askbootstrap">
-    <meta name="theme-color" content="#2c2c2c">
+    <meta name="theme-color" content="#565656">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="icon" type="image/png" href="img/fav.png">
     <link rel="apple-touch-icon" href="img/icon-192x192.png">
-    <title>Chawp - My Account</title>
+    <title>Chawmp - My Account</title>
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="vendor/icons/feather.css" rel="stylesheet" type="text/css">
     <link href="css/style.css" rel="stylesheet">
+    <link href="vendor/sidebar/demo.css" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
-
-    <!-- OneSignal Init -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(function(OneSignal) {
-            OneSignal.init({
-                appId: "f69ee07c-2405-4210-a18f-c6842db4c294",
-                safari_web_id: "web.onesignal.auto.10bba952-d3e6-4be7-b269-bd5caae877a4",
-                allowLocalhostAsSecureOrigin: true,
-                autoResubscribe: true
-            });
-            OneSignal.log.setLevel('trace');
-        });
-    </script>
-
     <style>
-        body { background: #2c2c2c; font-family: 'Poppins', sans-serif; color: #fff; }
-        .account-page { padding: 40px 20px; max-width: 600px; margin: 0 auto; }
-        .account-header { text-align: center; margin-bottom: 40px; position: relative; }
-        .account-header h2 { font-size: 2.5rem; font-weight: 700; color: #fff; margin: 0; letter-spacing: -0.5px; }
-        .back-btn-top { position: absolute; left: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: #00c8ff; font-size: 1.5rem; cursor: pointer; }
-        .back-btn-top:hover { color: #00b0e6; }
-        .account-card { background: #565656; border-radius: 15px; padding: 25px; box-shadow: 0 6px 15px rgba(0,0,0,0.3); }
+        .account-container {
+    padding: 50px 20px 100px;
+    max-width: 450px;
+    margin-left: 20px; /* Aligns content to the left with some padding */
+}
+        .account-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
+        .account-header h2 { font-size: 2rem; font-weight: 700; color: #fff; margin: 0; }
+        .back-btn-top { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; padding: 0; }
+        .back-btn-top:hover { color: #007bff; }
         .form-group { margin-bottom: 20px; }
-        .form-group label { font-size: 1rem; color: #b0b0b0; font-weight: 500; margin-bottom: 8px; display: block; }
-        .form-group input { background: #4a4a4a; border: none; color: #fff; padding: 12px 15px; border-radius: 10px; width: 100%; font-size: 1rem; outline: none; transition: background 0.3s ease; }
-        .form-group input[readonly] { background: #3a3a3a; opacity: 0.7; }
-        .form-group input:focus { background: #5a5a5a; }
-        .btn-primary { background: #00c8ff; border: none; padding: 12px; border-radius: 10px; font-size: 1rem; font-weight: 600; width: 100%; transition: background 0.3s ease; }
-        .btn-primary:hover { background: #00b0e6; }
-        .btn-secondary { background: #6c757d; border: none; padding: 12px; border-radius: 10px; font-size: 1rem; font-weight: 600; width: 100%; transition: background 0.3s ease; }
+        .form-group label { font-size: 0.95rem; color: #fff; opacity: 0.9; display: block; margin-bottom: 5px; }
+        .form-group input { background: #3a3a3a; border: none; color: #fff; padding: 10px; border-radius: 8px; width: 100%; font-size: 16px; outline: none; }
+        .form-group input[readonly] { background: #2a2a2a; opacity: 0.7; }
+        .btn-primary { background: #007bff; border: none; padding: 12px; border-radius: 50px; font-size: 1rem; font-weight: 600; width: 100%; transition: background 0.3s ease; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; border: none; padding: 12px; border-radius: 50px; font-size: 1rem; font-weight: 600; width: 100%; transition: background 0.3s ease; }
         .btn-secondary:hover { background: #5a6268; }
-        .btn-danger { background: #dc3545; border: none; padding: 12px; border-radius: 10px; font-size: 1rem; font-weight: 600; width: 100%; transition: background 0.3s ease; }
+        .btn-danger { background: #dc3545; border: none; padding: 12px; border-radius: 50px; font-size: 1rem; font-weight: 600; width: 100%; transition: background 0.3s ease; }
         .btn-danger:hover { background: #c82333; }
-        .options-section { margin-top: 30px; }
-        .options-section h5 { color: #fff; font-weight: 600; margin-bottom: 15px; font-size: 1.2rem; }
-        .notification-settings { margin-top: 20px; padding: 15px; background: #4a4a4a; border-radius: 10px; }
-        .notification-settings p { font-size: 1rem; color: #fff; margin: 0 0 15px; font-weight: 500; }
-        .notification-buttons { display: flex; gap: 10px; }
-        .notification-btn { flex: 1; padding: 10px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
-        .turn-on-btn { background: #00c8ff; border: none; color: #fff; }
-        .turn-on-btn:hover { background: #00b0e6; }
-        .turn-off-btn { background: #6c757d; border: none; color: #fff; }
-        .turn-off-btn:hover { background: #5a6268; }
-        .osahan-menu-fotter { background: #1a1a1a; box-shadow: 0 -4px 15px rgba(0,0,0,0.3); }
+        .options-section { margin-top: 40px; }
+        .options-section h5 { color: #fff; font-weight: 600; margin-bottom: 15px; }
+        html, body { -webkit-text-size-adjust: none; touch-action: manipulation; }
     </style>
 </head>
 <body class="fixed-bottom-bar">
-    <div class="account-page">
+    <div class="account-container">
         <div class="account-header">
             <button id="back-btn-top" class="back-btn-top"><i class="feather-arrow-left"></i></button>
             <h2>My Account</h2>
+            <div style="width: 24px;"></div> <!-- Spacer to balance layout -->
         </div>
-        <div class="account-card">
-            <form id="account-form">
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" readonly>
-                </div>
-                <div class="form-group">
-                    <label for="name">Nickname</label>
-                    <input type="text" id="name" placeholder="Enter your nickname" required>
-                </div>
-                <div class="form-group">
-                    <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" placeholder="Enter your phone number" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Save Changes</button>
-                <button type="button" id="back-btn" class="btn btn-secondary mt-3">Back to Profile</button>
-            </form>
-            <div class="notification-settings">
-                <p>Want to stay updated?</p>
-                <div class="notification-buttons">
-                    <button class="notification-btn turn-on-btn" onclick="turnOnNotifications()">Turn On</button>
-                    <button class="notification-btn turn-off-btn" onclick="turnOffNotifications()">Turn Off</button>
-                </div>
+        <form id="account-form">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" readonly>
             </div>
-            <div class="options-section">
-                <h5>Account Options</h5>
-                <button id="delete-account-btn" class="btn btn-danger">Delete Account</button>
+            <div class="form-group">
+                <label for="name">Nickname</label>
+                <input type="text" id="name" placeholder="Your Name" required>
             </div>
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" placeholder="Your Phone Number" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="button" id="back-btn" class="btn btn-secondary mt-3">Back to Profile</button>
+        </form>
+
+        <div class="options-section">
+            <h5>Account Options</h5>
+            <button id="delete-account-btn" class="btn btn-danger">Delete Account</button>
         </div>
     </div>
 
     <!-- Footer -->
-    <div class="osahan-menu-fotter fixed-bottom bg-darks px-3 py-2 text-center">
+    <div class="osahan-menu-fotter fixed-bottom bg-darker px-3 py-2 text-center">
         <div class="row">
             <div class="col"><a href="index.html" class="text-white small fw-bold text-decoration-none"><p class="h4 m-0"><i class="feather-map-pin"></i></p>Trending</a></div>
             <div class="col"><a href="home.html" class="text-white small fw-bold text-decoration-none"><p class="h4 m-0"><i class="feather-home text-white"></i></p>Home</a></div>
@@ -141,6 +112,7 @@
         const deleteAccountBtn = document.getElementById("delete-account-btn");
         const CACHE_KEY = "user-account-cache";
 
+        // Load account data with caching
         const loadAccountData = async (user) => {
             const cachedData = localStorage.getItem(`${CACHE_KEY}-${user.uid}`);
             if (cachedData) {
@@ -160,6 +132,7 @@
             }
         };
 
+        // Fetch from Firestore and cache
         const fetchAndCacheAccountData = async (user) => {
             try {
                 const userDocRef = doc(db, "users", user.uid);
@@ -178,6 +151,7 @@
             }
         };
 
+        // Save changes to Firestore
         accountForm.addEventListener("submit", async (e) => {
             e.preventDefault();
             const user = auth.currentUser;
@@ -190,7 +164,7 @@
 
             try {
                 const userDocRef = doc(db, "users", user.uid);
-                await setDoc(userDocRef, updatedData, {clause: true });
+                await setDoc(userDocRef, updatedData, { merge: true });
                 const cachedData = JSON.parse(localStorage.getItem(`${CACHE_KEY}-${user.uid}`)) || {};
                 localStorage.setItem(`${CACHE_KEY}-${user.uid}`, JSON.stringify({ ...cachedData, ...updatedData }));
                 window.location.href = "profile.html";
@@ -200,10 +174,12 @@
             }
         });
 
+        // Back to profile (both buttons)
         const goBack = () => window.location.href = "profile.html";
         backBtn.addEventListener("click", goBack);
         backBtnTop.addEventListener("click", goBack);
 
+        // Delete account
         deleteAccountBtn.addEventListener("click", async () => {
             const user = auth.currentUser;
             if (!user) return;
@@ -222,63 +198,7 @@
             }
         });
 
-        async function checkSubscriptionStatus() {
-            const OneSignal = window.OneSignalDeferred[0];
-            if (!OneSignal) return false;
-            try {
-                const sub = await OneSignal.User.PushSubscription.getPushSubscription();
-                return sub?.optedIn || false;
-            } catch (error) {
-                console.error("Error checking subscription status:", error);
-                return false;
-            }
-        }
-
-        window.turnOnNotifications = async function() {
-            const OneSignal = window.OneSignalDeferred[0];
-            if (!OneSignal) {
-                alert("Notification service not ready. Try again later.");
-                return;
-            }
-            try {
-                const permission = await Notification.requestPermission();
-                if (permission === "granted") {
-                    await OneSignal.User.PushSubscription.optIn();
-                    const isSubscribed = await checkSubscriptionStatus();
-                    if (isSubscribed) {
-                        alert("Notifications turned on successfully!");
-                    } else {
-                        alert("Failed to turn on notifications. Try again.");
-                    }
-                } else if (permission === "denied") {
-                    alert("Notifications blocked. Enable them in your browser settings.");
-                }
-            } catch (error) {
-                console.error("Error turning on notifications:", error);
-                alert("Failed to turn on notifications. Check your browser settings.");
-            }
-        };
-
-        window.turnOffNotifications = async function() {
-            const OneSignal = window.OneSignalDeferred[0];
-            if (!OneSignal) {
-                alert("Notification service not ready. Try again later.");
-                return;
-            }
-            try {
-                await OneSignal.User.PushSubscription.optOut();
-                const isSubscribed = await checkSubscriptionStatus();
-                if (!isSubscribed) {
-                    alert("Notifications turned off successfully!");
-                } else {
-                    alert("Failed to turn off notifications. Try again.");
-                }
-            } catch (error) {
-                console.error("Error turning off notifications:", error);
-                alert("Failed to turn off notifications. Try again.");
-            }
-        };
-
+        // Initial load
         document.addEventListener("DOMContentLoaded", () => {
             const user = auth.currentUser;
             if (user) {
@@ -293,6 +213,5 @@
     </script>
     <script defer src="vendor/jquery/jquery.min.js"></script>
     <script defer src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>nt.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92771a195ea2bae0',t:'MTc0MzE2NDY0MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
