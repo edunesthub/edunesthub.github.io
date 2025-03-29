@@ -70,20 +70,8 @@ OneSignalDeferred.push(function(OneSignal) {
         OneSignal.User.PushSubscription.addEventListener('change', checkSubscription);
         checkSubscription();
     });
-
-
-
-    // Nudge iOS users to install PWA
-    if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream && !navigator.standalone) {
-        setTimeout(() => {
-            alert("Yo, fam! Add Chawp to your Home Screen for notifications. Tap Share > 'Add to Home Screen'.");
-        }, 2000);
-    }
 });
-
 </script>
-
-
 
     <style>
         body {background:#2c2c2c;font-family:'Poppins', sans-serif;color:#fff;overflow-x:hidden;}
@@ -131,62 +119,10 @@ OneSignalDeferred.push(function(OneSignal) {
             .promo-banner p {font-size:0.9rem;}
         }
         .bg-darks {background:#1a1a1a;color:#00c8ff;}
-        .subscription-prompt {
-            margin: 25px 15px;
-            padding: 20px;
-            background: #565656;
-            border-radius: 15px;
-            text-align: center;
-            color: #fff;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-            transition: opacity 0.5s ease;
-            opacity: 0;
-        }
-        .subscription-prompt.loaded {
-            opacity: 1;
-        }
-.subscription-prompt h3 {
-    font-size: 1.5rem;
-    margin: 0;
-    color: #00c8ff;
-    font-weight: 700;
-}
-.subscription-prompt p {
-    font-size: 1rem;
-    margin: 8px 0;
-    opacity: 0.9;
-    font-weight: 400;
-    color: #b0b0b0;
-}
-.subscription-prompt button {
-    background: #00c8ff;
-    color: #fff;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin: 5px;
-    font-weight: 600;
-}
-.subscription-prompt button:hover {
-    background: #00b0e6;
-}
-.subscription-prompt .dismiss-btn {
-    background: #4a4a4a;
-}
-.subscription-prompt .dismiss-btn:hover {
-    background: #5a5a5a;
-}
     </style>
 </head>
 <body class="fixed-bottom-bar">
     <div class="osahan-home-page">
-        <div class="subscription-prompt" id="subscriptionPrompt">
-            <h3>Stay in the Loop, Fam! 🔥</h3>
-            <p>Enable notifications to get the latest deals and updates.</p>
-            <button onclick="subscribeToNotifications()">Turn On Notifications</button>
-            <button onclick="dismissPrompt()" class="dismiss-btn">Not Now</button>
-        </div>
         <div class="welcome-header">
             <div class="title d-flex align-items-center justify-content-center">
                 <h1 id="welcome-message">Hi!</h1>
@@ -346,85 +282,6 @@ OneSignalDeferred.push(function(OneSignal) {
             }
         }
     
-        function shouldShowPrompt() {
-            return localStorage.getItem('chawpPromptDismissed') !== 'true';
-        }
-    
-        function removeSubscriptionPrompt() {
-            const prompt = document.getElementById("subscriptionPrompt");
-            if (prompt) {
-                prompt.style.opacity = '0';
-                setTimeout(() => {
-                    prompt.remove();
-                    localStorage.setItem('chawpPromptDismissed', 'true');
-                    console.log("Prompt removed and dismissed permanently.");
-                }, 500);
-            } else {
-                localStorage.setItem('chawpPromptDismissed', 'true');
-                console.log("Prompt not found, marked as dismissed.");
-            }
-        }
-    
-        async function checkSubscriptionStatus() {
-            const OneSignal = window.OneSignalDeferred[0];
-            if (!OneSignal) {
-                console.error("OneSignal not initialized yet.");
-                return false;
-            }
-            try {
-                const sub = await OneSignal.User.PushSubscription.getPushSubscription();
-                return sub?.optedIn || false;
-            } catch (error) {
-                console.error("Error checking subscription status:", error);
-                return false;
-            }
-        }
-    
-        window.subscribeToNotifications = async function() {
-            const OneSignal = window.OneSignalDeferred[0];
-            if (!OneSignal) {
-                console.error("OneSignal not initialized.");
-                removeSubscriptionPrompt();
-                alert("Notification service not ready. Try again later.");
-                return;
-            }
-    
-            try {
-                console.log("Requesting browser notification permission...");
-                const permission = await Notification.requestPermission();
-                console.log("Permission result:", permission);
-    
-                if (permission === "granted") {
-                    console.log("Permission granted, subscribing with OneSignal...");
-                    await OneSignal.User.PushSubscription.optIn();
-                    const isSubscribed = await checkSubscriptionStatus();
-                    if (isSubscribed) {
-                        console.log("Successfully subscribed to notifications!");
-                        removeSubscriptionPrompt();
-                    } else {
-                        console.warn("Subscription failed after permission granted.");
-                        alert("Subscribed, but something went wrong. Try again.");
-                    }
-                } else if (permission === "denied") {
-                    console.log("Permission denied by user.");
-                    removeSubscriptionPrompt();
-                    alert("Notifications blocked. Enable them in your browser settings to proceed.");
-                } else {
-                    console.log("Permission dismissed (default).");
-                    removeSubscriptionPrompt();
-                }
-            } catch (error) {
-                console.error("Error during subscription:", error);
-                removeSubscriptionPrompt();
-                alert("Failed to enable notifications. Check your browser settings or try again.");
-            }
-        };
-    
-        window.dismissPrompt = function() {
-            console.log("User dismissed prompt.");
-            removeSubscriptionPrompt();
-        };
-    
         document.addEventListener("DOMContentLoaded", async () => {
             loadTrendingRestaurants();
             updateWelcomeMessage();
@@ -434,37 +291,6 @@ OneSignalDeferred.push(function(OneSignal) {
                 document.querySelector(".promo-banner")?.classList.add("loaded");
                 document.querySelector(".osahan-menu-fotter")?.classList.add("loaded");
             }, 50);
-    
-            const prompt = document.getElementById("subscriptionPrompt");
-            if (!prompt) {
-                console.warn("Subscription prompt missing from DOM.");
-                localStorage.setItem('chawpPromptDismissed', 'true');
-                return;
-            }
-    
-            if (!shouldShowPrompt()) {
-                console.log("Prompt already dismissed, removing...");
-                prompt.remove();
-                return;
-            }
-    
-            window.OneSignalDeferred.push(async (OneSignal) => {
-                const isSubscribed = await checkSubscriptionStatus();
-                if (isSubscribed) {
-                    console.log("User already subscribed, removing prompt.");
-                    removeSubscriptionPrompt();
-                } else {
-                    console.log("User not subscribed, showing prompt...");
-                    prompt.classList.add("loaded");
-                }
-    
-                OneSignal.User.PushSubscription.on('change', (subscription) => {
-                    console.log("Subscription state changed:", subscription.optedIn);
-                    if (subscription.optedIn) {
-                        removeSubscriptionPrompt();
-                    }
-                });
-            });
     
             if ("serviceWorker" in navigator) {
                 navigator.serviceWorker.register("/service-worker.js")
@@ -483,5 +309,5 @@ OneSignalDeferred.push(function(OneSignal) {
             }
         });
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9281efce29d1bfbd',t:'MTc0MzI3ODI1MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
