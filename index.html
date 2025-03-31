@@ -17,7 +17,15 @@
     <link rel="manifest" href="manifest.json">
     <link href="css/style.css" rel="stylesheet">
 
-
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "f69ee07c-2405-4210-a18f-c6842db4c294",
+    });
+  });
+</script>
 
     <style>
         body {background:#2c2c2c;font-family:'Poppins', sans-serif;color:#fff;overflow-x:hidden;}
@@ -30,8 +38,8 @@
         .list-card:hover {transform:translateY(-8px);box-shadow:0 12px 24px rgba(0,0,0,0.3);}
         .list-card-image img {height:110px;object-fit:cover;width:100%;border-radius:10px 10px 0 0;filter:brightness(0.9);transition:filter 0.3s ease;}
         .list-card:hover .list-card-image img {filter:brightness(1);}
-        .list-card-body {padding:8px;text-align:left;height:60px;}
-        .list-card-body h6 {font-size:1rem;font-weight:600;color:#fff;margin-bottom:4px;overflow-wrap:break-word;white-space:normal;max-height:32px;line-height:1.1;}
+        .list-card-body {padding:8px;text-align:left;height:60px;} /* Shortened height */
+        .list-card-body h6 {font-size:1rem;font-weight:600;color:#fff;margin-bottom:4px;overflow-wrap:break-word;white-space:normal;max-height:32px;line-height:1.1;} /* Smaller, full names */
         .time {font-size:0.75rem;color:#b0b0b0;margin-top:2px;}
         .time span {background:#4a4a4a;color:#fff;padding:3px 8px;border-radius:12px;}
         .trending-text {color:#fff;font-weight:600;}
@@ -64,7 +72,11 @@
             .promo-banner h3 {font-size:1.5rem;}
             .promo-banner p {font-size:0.9rem;}
         }
-        .bg-darks {background:#1a1a1a;color:#00c8ff;}
+        .bg-darks{
+            background: #1a1a1a;
+            color: #00c8ff;
+        }
+        
     </style>
 </head>
 <body class="fixed-bottom-bar">
@@ -75,10 +87,11 @@
             </div>
             <p>Abi you dey hung?</p>
         </div>
-        <div class="promo-banner" onclick="location.href='/home.html'">
+        <div class="promo-banner" onclick="location.href='home.html'">
             <h3>Swift Delivery, At Your Door!</h3>
             <p>Order now and enjoy delicious food in minutes.</p>
         </div>
+        
     </div>
 
     <div class="trending-section">
@@ -126,7 +139,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
         import { getFirestore, collection, getDocs, query, orderBy, limit, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
-    
+
         const firebaseConfig = {
             apiKey: "AIzaSyADvpUQWo75ExePGoCRirD2mM-lmfM4Cmc",
             authDomain: "von600-7982d.firebaseapp.com",
@@ -136,24 +149,25 @@
             appId: "1:164591218045:web:afe17512e16573e7903014",
             measurementId: "G-E69DMPLXBK"
         };
-    
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-    
+
         enableIndexedDbPersistence(db).catch(err => console.warn("Firestore persistence failed:", err));
-    
+
         async function loadTrendingRestaurants() {
             const trendingList = document.getElementById("trending-list");
             const trendingSection = document.querySelector(".trending-section");
-    
+
+            // Check cache first for instant load
             const cachedData = localStorage.getItem("trendingRestaurants");
             if (cachedData) {
                 trendingList.innerHTML = cachedData;
                 setTimeout(() => {
                     trendingSection.classList.add("loaded");
                     document.querySelectorAll(".list-card").forEach(card => card.classList.add("loaded"));
-                }, 50);
+                }, 50); // Faster fade-in
                 if (!navigator.onLine) {
                     document.body.classList.add("offline");
                     return;
@@ -161,17 +175,17 @@
             } else {
                 trendingList.innerHTML = "<p style='color:#b0b0b0;'>Loading restaurants...</p>";
             }
-    
+
             try {
                 const q = query(collection(db, "restaurant"), orderBy("rating", "desc"), limit(6));
                 const querySnapshot = await getDocs(q);
-    
+
                 if (querySnapshot.empty) {
                     trendingList.innerHTML = "<p style='color:#b0b0b0;'>No trending restaurants found.</p>";
                     trendingSection.classList.add("loaded");
                     return;
                 }
-    
+
                 let output = "";
                 querySnapshot.forEach(doc => {
                     const data = doc.data();
@@ -180,7 +194,7 @@
                         <div class="list-card">
                             <div class="list-card-image">
                                 <a href="restaurant.html?id=${restaurantId}">
-                                    <img alt="${data.name || 'Restaurant'}" src="${data.image || '/img/placeholder.png'}" class="img-fluid item-img" loading="lazy">
+                                    <img alt="${data.name || 'Restaurant'}" src="${data.image || 'img/placeholder.png'}" class="img-fluid item-img" loading="lazy">
                                 </a>
                             </div>
                             <div class="list-card-body">
@@ -190,7 +204,7 @@
                         </div>
                     `;
                 });
-    
+
                 trendingList.innerHTML = output;
                 localStorage.setItem("trendingRestaurants", output);
                 document.body.classList.remove("offline");
@@ -198,6 +212,7 @@
                     trendingSection.classList.add("loaded");
                     document.querySelectorAll(".list-card").forEach(card => card.classList.add("loaded"));
                 }, 50);
+
             } catch (error) {
                 console.error("❌ ERROR fetching trending restaurants:", error);
                 if (!cachedData) {
@@ -206,7 +221,7 @@
                 }
             }
         }
-    
+
         function updateWelcomeMessage() {
             const welcomeMessage = document.getElementById("welcome-message");
             const cachedUser = localStorage.getItem("user-account-cache-" + (auth.currentUser?.uid || ""));
@@ -227,24 +242,24 @@
                 });
             }
         }
-    
-        document.addEventListener("DOMContentLoaded", async () => {
+
+        document.addEventListener("DOMContentLoaded", () => {
             loadTrendingRestaurants();
             updateWelcomeMessage();
-    
+
             setTimeout(() => {
-                document.querySelector(".welcome-header")?.classList.add("loaded");
-                document.querySelector(".promo-banner")?.classList.add("loaded");
-                document.querySelector(".osahan-menu-fotter")?.classList.add("loaded");
+                document.querySelector(".welcome-header").classList.add("loaded");
+                document.querySelector(".promo-banner").classList.add("loaded");
+                document.querySelector(".osahan-menu-fotter").classList.add("loaded");
             }, 50);
-    
+
             if ("serviceWorker" in navigator) {
-                navigator.serviceWorker.register("/service-worker.js")
-                    .then(() => console.log("PWA Ready, fam!"))
+                navigator.serviceWorker.register("service-worker.js")
+                    .then(() => console.log("PWA Ready!"))
                     .catch(error => console.error("PWA Error:", error));
             }
         });
-    
+
         window.addEventListener("online", loadTrendingRestaurants);
         window.addEventListener("offline", () => {
             const cachedData = localStorage.getItem("trendingRestaurants");
@@ -254,6 +269,39 @@
                 setTimeout(() => document.querySelector(".trending-section").classList.add("loaded"), 50);
             }
         });
+
+        // Check if browser supports service workers and push
+if ("serviceWorker" in navigator && "PushManager" in window) {
+    navigator.serviceWorker.register("/service-worker.js")
+        .then(registration => {
+            // Ask for notification permission
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    // Get the push subscription
+                    registration.pushManager.subscribe({
+                        userVisibleOnly: true, // Required by browsers
+                        applicationServerKey: "YOUR_VAPID_PUBLIC_KEY" // See below for this
+                    }).then(subscription => {
+                        // Send this subscription to Progressier
+                        fetch("https://progressier.app/YOUR_APP_ID/subscribe", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": "Token YOUR_API_TOKEN"
+                            },
+                            body: JSON.stringify(subscription)
+                        })
+                        .then(response => {
+                            if (response.ok) console.log("Subscribed, fam!");
+                            else console.error("Subscription failed, bro.");
+                        })
+                        .catch(error => console.error("Error:", error));
+                    });
+                }
+            });
+        })
+        .catch(error => console.error("Service Worker reg failed:", error));
+}
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'928206268db1ada6',t:'MTc0MzI3OTE2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'927746ef38e553de',t:'MTc0MzE2NjQ3Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
