@@ -164,8 +164,9 @@
             notificationMessage: document.getElementById("notification-message")
         };
 
-        const showNotification = message => {
+        const showNotification = (message, type = "success") => {
             elements.notificationMessage.textContent = message;
+            elements.notification.className = `notification ${type === "error" ? "error" : ""}`;
             elements.notification.classList.add("show");
             setTimeout(() => elements.notification.classList.remove("show"), 2000);
         };
@@ -276,18 +277,13 @@
         };
 
         let isProcessing = false;
-        const debounceCheckout = (fn, delay) => {
-            let timeout;
-            return (...args) => {
-                if (timeout) clearTimeout(timeout);
-                timeout = setTimeout(() => fn(...args), delay);
-            };
-        };
 
-        const proceedToCheckout = debounceCheckout(async () => {
+        const proceedToCheckout = async () => {
+            // Prevent multiple submissions
             if (isProcessing) return;
             isProcessing = true;
 
+            // Immediately update the button state for feedback
             const checkoutBtn = document.getElementById("checkout-btn");
             checkoutBtn.disabled = true;
             checkoutBtn.textContent = "Processing...";
@@ -296,13 +292,14 @@
             const persistentDetails = getPersistentDeliveryDetails();
             const deliveryNotes = document.getElementById("delivery-notes").value;
 
+            // Validate cart and delivery details
             if (!cart.length) {
-                showNotification("Your cart is empty!");
+                showNotification("Your cart is empty!", "error");
                 resetCheckoutButton();
                 return;
             }
             if (!persistentDetails.location || !persistentDetails.contactNumber) {
-                showNotification("Please enter your location and contact number!");
+                showNotification("Please enter your location and contact number!", "error");
                 resetCheckoutButton();
                 return;
             }
@@ -315,14 +312,27 @@
             });
 
             if (!sanitizedCart.length) {
-                showNotification("Invalid items in cart!");
+                showNotification("Invalid items in cart!", "error");
+                resetCheckoutButton();
+                return;
+            }
+
+            // Validate restaurantId consistency
+            const restaurantIds = [...new Set(sanitizedCart.map(item => item.restaurantId))];
+            if (restaurantIds.length > 1) {
+                showNotification("Error: Cart contains items from multiple restaurants!", "error");
+                resetCheckoutButton();
+                return;
+            }
+            if (!sanitizedCart[0].restaurantId) {
+                showNotification("Error: Restaurant ID is missing in cart items!", "error");
                 resetCheckoutButton();
                 return;
             }
 
             const totalAmount = sanitizedCart.reduce((sum, item) => sum + item.price * item.quantity, 0) + 5;
             const orderData = {
-                restaurantId: sanitizedCart[0].restaurantId || "IHvLe6CCwUKl9FC2o3Dq",
+                restaurantId: sanitizedCart[0].restaurantId,
                 items: sanitizedCart.map(item => ({
                     name: item.name,
                     price: item.price,
@@ -337,10 +347,10 @@
                     contactNumber: persistentDetails.contactNumber
                 },
                 timestamp: new Date().toISOString(),
-                status: "pending" // Add status to track order state
+                status: "pending"
             };
 
-            console.log("Submitting order:", orderData); // Debug log
+            console.log("Submitting order:", orderData);
 
             try {
                 const docRef = await addDoc(collection(db, "orders"), orderData);
@@ -350,17 +360,21 @@
                 if (paymentSuccess) {
                     saveCart([]);
                     showNotification("Order placed successfully!");
-                    window.location.href = "successful.html";
+                    setTimeout(() => {
+                        window.location.href = "successful.html";
+                    }, 1000); // Delay redirect to show notification
                 } else {
-                    showNotification("Payment failed.");
-                    window.location.href = "payment-failure.html";
+                    showNotification("Payment failed.", "error");
+                    setTimeout(() => {
+                        window.location.href = "payment-failure.html";
+                    }, 1000);
                 }
             } catch (error) {
                 showNotification("Error saving order!", "error");
                 console.error("Error in proceedToCheckout:", error);
                 resetCheckoutButton();
             }
-        }, 300);
+        };
 
         function resetCheckoutButton() {
             const checkoutBtn = document.getElementById("checkout-btn");
@@ -374,5 +388,6 @@
             feather.replace();
         });
     </script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'928f54872e217b9b',t:'MTc0MzQxODY5MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
