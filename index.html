@@ -9,13 +9,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <link rel="icon" type="image/png" href="/img/fav.png">
-    <link rel="apple-touch-icon" href="/img/icon-192x192.png">
+    <link rel="icon" type="image/png" href="img/fav.png">
+    <link rel="apple-touch-icon" href="img/icon-192x192.png">
     <title>Chawp</title>
-    <link href="/vendor/icons/feather.css" rel="stylesheet" type="text/css">
-    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="manifest" href="/manifest.json">
-    <link href="/css/style.css" rel="stylesheet">
+    <link href="vendor/icons/feather.css" rel="stylesheet" type="text/css">
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <link href="css/style.css" rel="stylesheet">
 
 
 
@@ -85,7 +85,7 @@
         <div class="container">
             <div class="d-flex align-items-center">
                 <h5 class="trending-text">Trending Now 🔥</h5>
-                <a class="fw-bold ms-auto text-white" href="/home.html">All <i class="feather-chevrons-right"></i></a>
+                <a class="fw-bold ms-auto text-white" href="home.html">All <i class="feather-chevrons-right"></i></a>
             </div>
             <div class="offline-notice">You’re offline. Showing cached content.</div>
             <div id="trending-list"></div>
@@ -95,27 +95,27 @@
     <div class="osahan-menu-fotter fixed-bottom bg-darks px-3 py-2 text-center">
         <div class="row">
             <div class="col selected">
-                <a href="/index.html" class="text-danger small fw-bold text-decoration-none">
+                <a href="index.html" class="text-danger small fw-bold text-decoration-none">
                     <p class="h4 m-0"><i class="feather-map-pin text-danger"></i></p>Trending
                 </a>
             </div>
             <div class="col">
-                <a href="/home.html" class="text-white small fw-bold text-decoration-none">
+                <a href="home.html" class="text-white small fw-bold text-decoration-none">
                     <p class="h4 m-0"><i class="feather-home text-white"></i></p>Home
                 </a>
             </div>
             <div class="col">
-                <a href="/cart.html" class="text-white small fw-bold text-decoration-none">
+                <a href="cart.html" class="text-white small fw-bold text-decoration-none">
                     <p class="h4 m-0"><i class="feather-shopping-cart"></i></p>Cart
                 </a>
             </div>
             <div class="col">
-                <a href="/orders.html" class="text-white small fw-bold text-decoration-none">
+                <a href="orders.html" class="text-white small fw-bold text-decoration-none">
                     <p class="h4 m-0"><i class="feather-shopping-bag"></i></p>Orders
                 </a>
             </div>
             <div class="col">
-                <a href="/profile.html" class="text-white small fw-bold text-decoration-none">
+                <a href="profile.html" class="text-white small fw-bold text-decoration-none">
                     <p class="h4 m-0"><i class="feather-user"></i></p>Profile
                 </a>
             </div>
@@ -179,13 +179,13 @@
                     output += `
                         <div class="list-card">
                             <div class="list-card-image">
-                                <a href="/restaurant.html?id=${restaurantId}">
+                                <a href="restaurant.html?id=${restaurantId}">
                                     <img alt="${data.name || 'Restaurant'}" src="${data.image || '/img/placeholder.png'}" class="img-fluid item-img" loading="lazy">
                                 </a>
                             </div>
                             <div class="list-card-body">
-                                <h6 class="mb-1"><a href="/restaurant.html?id=${restaurantId}" class="text-white">${data.name || 'Unnamed'}</a></h6>
-                                <p class="time"><a href="/restaurant.html?id=${restaurantId}"><span><i class="feather-clock me-1"></i>${Math.max(5, data.delivery_time - 15)}-${data.delivery_time} mins</span></a></p>
+                                <h6 class="mb-1"><a href="restaurant.html?id=${restaurantId}" class="text-white">${data.name || 'Unnamed'}</a></h6>
+                                <p class="time"><a href="restaurant.html?id=${restaurantId}"><span><i class="feather-clock me-1"></i>${Math.max(5, data.delivery_time - 15)}-${data.delivery_time} mins</span></a></p>
                             </div>
                         </div>
                     `;
