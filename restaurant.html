@@ -46,18 +46,16 @@
             .menu-item { padding: 10px; }
             .options-panel { padding: 15px; }
         }
-        /* Prevent zoom on input focus */
         input, textarea {
-            font-size: 16px; /* Ensures iOS doesn't zoom */
+            font-size: 16px;
             outline: none;
         }
-        /* Disable layout shift or zoom */
         *:focus {
-            zoom: 1 !important; /* Forces no zoom */
+            zoom: 1 !important;
         }
         html, body {
-            -webkit-text-size-adjust: none; /* Prevents text size adjustment */
-            touch-action: manipulation; /* Disables double-tap zoom */
+            -webkit-text-size-adjust: none;
+            touch-action: manipulation;
         }
     </style>
     <script defer src="https://unpkg.com/feather-icons"></script>
@@ -106,7 +104,7 @@
     <a href="cart.html" class="view-cart-btn" id="view-cart-btn">View Cart</a>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, getDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, enableIndexedDbPersistence, addDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADvpUQWo75ExePGoCRirD2mM-lmfM4Cmc",
@@ -216,13 +214,27 @@
             updateCartButton();
         };
 
-        const addToCart = item => {
+        const addToCart = async item => {
             const cart = JSON.parse(localStorage.getItem("cart") || "[]");
             cart.push(item);
             localStorage.setItem("cart", JSON.stringify(cart));
             cartCount++;
             updateCartButton();
             showToast(`${item.name} added to cart!`);
+            
+            // Save to Firestore orders collection with restaurantId
+            try {
+                await addDoc(collection(db, "orders"), {
+                    restaurantId: restaurantId,
+                    items: item.quantity > 1 ? Array(item.quantity).fill({ name: item.name, total: item.price }) : [{ name: item.name, total: item.price }],
+                    totalAmount: item.price * item.quantity,
+                    timestamp: new Date().toISOString(),
+                    note: item.note || ""
+                });
+                console.log("Order saved to Firestore");
+            } catch (error) {
+                console.error("Error saving order to Firestore:", error);
+            }
         };
 
         document.onclick = e => {
@@ -267,5 +279,5 @@
         });
     </script>
    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'923f6a091cb54509',t:'MTc0MjU4MDcxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'928b5f22bce432f9',t:'MTc0MzM3NzE4My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

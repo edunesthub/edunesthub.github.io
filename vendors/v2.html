@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>King Gabby - Vendor Home</title>
+    <title>Vendor Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -22,7 +22,6 @@
             max-width: 900px;
             margin: 0 auto;
             padding: 20px;
-            position: relative; /* For notification positioning */
         }
         .section {
             background: #1c1c1e;
@@ -60,14 +59,6 @@
             background: #2ea44f;
             transform: translateY(-2px);
         }
-        .btn-delivered {
-            background: #f59e0b;
-            padding: 5px 15px;
-        }
-        .btn-delivered:hover {
-            background: #d97706;
-            transform: translateY(-2px);
-        }
         .input {
             background: #2c2c2e;
             border: none;
@@ -80,21 +71,12 @@
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
         }
         .notification {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
             background: #34c759;
-            padding: 12px 24px;
+            padding: 12px;
             border-radius: 12px;
             text-align: center;
+            margin-bottom: 20px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .notification.show {
-            opacity: 1;
         }
         .notification.error {
             background: #ff3b30;
@@ -104,23 +86,24 @@
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 15px;
         }
-        .menu-list .menu-item, .order-item {
+        .menu-list .menu-item {
             background: #2c2c2e;
             padding: 15px;
             border-radius: 12px;
             margin-bottom: 15px;
+            cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .menu-list .menu-item:hover, .order-item:hover {
+        .menu-list .menu-item:hover {
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
-        .menu-item h4, .order-item h4 {
+        .menu-item h4 {
             margin: 0 0 10px;
             font-size: 1.25rem;
             font-weight: 600;
         }
-        .menu-item p, .order-item p {
+        .menu-item p {
             margin: 5px 0;
             font-size: 0.9rem;
             opacity: 0.8;
@@ -156,15 +139,13 @@
         <h1 class="text-4xl font-semibold text-center mb-4">🏪 <span id="restaurant-name">Vendor Portal</span></h1>
         <p id="welcome-message" class="text-center text-gray-400 mb-8">Manage your culinary empire with elegance.</p>
 
-        <div id="notification" class="notification"></div>
+        <div id="notification" class="hidden notification"></div>
 
         <div class="grid mb-8">
             <button id="manage-store-btn" class="btn">Manage Store</button>
             <button id="manage-menu-btn" class="btn">Manage Menu</button>
             <button id="view-orders-btn" class="btn">View Orders</button>
             <button id="delivery-btn" class="btn">Delivery</button>
-            <button id="delivered-btn" class="btn">Delivered Orders</button>
-            <button id="not-delivered-btn" class="btn">Not Delivered Orders</button>
             <button id="settings-btn" class="btn">Settings</button>
         </div>
 
@@ -197,17 +178,7 @@
 
         <div id="delivery" class="section hidden">
             <h2 class="text-2xl font-semibold mb-4">Delivery</h2>
-            <div id="delivery-list">Loading delivery orders...</div>
-        </div>
-
-        <div id="delivered" class="section hidden">
-            <h2 class="text-2xl font-semibold mb-4">Delivered Orders</h2>
-            <div id="delivered-list">Loading delivered orders...</div>
-        </div>
-
-        <div id="not-delivered" class="section hidden">
-            <h2 class="text-2xl font-semibold mb-4">Not Delivered Orders</h2>
-            <div id="not-delivered-list">Loading not delivered orders...</div>
+            <p class="text-gray-400">Delivery settings coming soon.</p>
         </div>
 
         <div id="settings" class="section hidden">
@@ -219,7 +190,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
         import { 
-            getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, deleteDoc, updateDoc, query, where, onSnapshot
+            getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, deleteDoc, updateDoc, query, where
         } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -234,34 +205,23 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const restaurantId = "IHvLe6CCwUKl9FC2o3Dq";
+        const restaurantId = "21Q6Z7a8aQVnexevjKhB";
         let selectedMenuId = null;
 
         function showNotification(message, type = "success") {
             const notification = document.getElementById("notification");
             notification.textContent = message;
             notification.className = `notification ${type === "error" ? "error" : ""}`;
-            notification.classList.add("show");
-            setTimeout(() => notification.classList.remove("show"), 3000);
+            notification.classList.remove("hidden");
+            setTimeout(() => notification.classList.add("hidden"), 3000);
         }
 
         function toggleSection(sectionId) {
-            const sections = ["manage-store", "manage-menu", "view-orders", "delivery", "delivered", "not-delivered", "settings"];
+            const sections = ["manage-store", "manage-menu", "view-orders", "delivery", "settings"];
             sections.forEach(id => {
                 document.getElementById(id).classList.toggle("hidden", id !== sectionId);
             });
         }
-
-        // Function to validate orders and filter out those with "undefined" values
-        const isValidOrder = (order) => {
-            if (!order.items || !Array.isArray(order.items)) return false;
-            return order.items.every(item => 
-                typeof item.name === "string" && item.name !== "undefined" &&
-                typeof item.quantity === "number" && !isNaN(item.quantity) &&
-                typeof item.price === "number" && !isNaN(item.price) &&
-                typeof item.total === "number" && !isNaN(item.total)
-            );
-        };
 
         async function loadRestaurantData() {
             try {
@@ -413,224 +373,36 @@
             }
         }
 
-        function loadOrders() {
-            const ordersList = document.getElementById("orders-list");
-            const q = query(collection(db, "orders"), where("restaurantId", "==", restaurantId));
-            onSnapshot(q, (snapshot) => {
-                if (snapshot.empty) {
+        async function loadOrders() {
+            try {
+                const ordersList = document.getElementById("orders-list");
+                ordersList.innerHTML = "<p class='text-gray-400'>Loading orders...</p>";
+                const ordersRef = collection(db, "orders");
+                const q = query(ordersRef, where("restaurantId", "==", restaurantId));
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) {
                     ordersList.innerHTML = "<p class='text-gray-400'>No orders found for King Gabby yet.</p>";
                     return;
                 }
-                const orders = [];
-                snapshot.forEach(doc => {
-                    const order = { id: doc.id, ...doc.data() };
-                    if (isValidOrder(order)) {
-                        orders.push(order);
-                    } else {
-                        console.log("Filtered out invalid order in View Orders:", order);
-                    }
-                });
-                orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                 let output = "";
-                orders.forEach(order => {
-                    if (order.status !== "being_delivered" && order.status !== "delivered" && order.status !== "not_delivered") {
-                        const items = order.items.map(item => `${item.quantity}x ${item.name}`).join(", ");
-                        const subtotal = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-                        output += `
-                            <div class="order-item">
-                                <p><strong>Items:</strong> ${items}</p>
-                                <p><strong>Total:</strong> GH₵${subtotal.toFixed(2)}</p>
-                                <p><strong>Order ID:</strong> ${order.id}</p>
-                                <p><strong>Time:</strong> ${new Date(order.timestamp).toLocaleString()}</p>
-                                
-                                <p><strong>Note:</strong> ${order.note || "None"}</p>
-                                <button class="btn btn-delivered mark-delivered-btn" data-order-id="${order.id}">Mark as Being Delivered</button>
-                            </div>
-                        `;
-                    }
+                querySnapshot.forEach(docSnapshot => {
+                    const order = docSnapshot.data();
+                    const items = order.items.map(item => `${item.quantity}x ${item.name}`).join(", ");
+                    output += `
+                        <div class="bg-gray-800 p-4 rounded mb-4">
+                            <p><strong>Order ID:</strong> ${docSnapshot.id}</p>
+                            <p><strong>Time:</strong> ${new Date(order.timestamp).toLocaleString()}</p>
+                            <p><strong>Items:</strong> ${items}</p>
+                            <p><strong>Total:</strong> GH₵${order.totalAmount.toFixed(2)}</p>
+                            <p><strong>Note:</strong> ${order.note || "None"}</p>
+                        </div>
+                    `;
                 });
-                ordersList.innerHTML = output || "<p class='text-gray-400'>No pending orders.</p>";
-                ordersList.querySelectorAll(".mark-delivered-btn").forEach(btn => {
-                    btn.addEventListener("click", () => markOrderAsBeingDelivered(btn.dataset.orderId));
-                });
-            }, (error) => {
+                ordersList.innerHTML = output;
+            } catch (error) {
                 showNotification("Error loading orders!", "error");
                 console.error("Error in loadOrders:", error);
-                ordersList.innerHTML = "<p class='text-gray-400'>Error loading orders.</p>";
-            });
-        }
-
-        function loadDeliveryOrders() {
-            const deliveryList = document.getElementById("delivery-list");
-            const q = query(collection(db, "orders"), where("restaurantId", "==", restaurantId));
-            onSnapshot(q, (snapshot) => {
-                if (snapshot.empty) {
-                    deliveryList.innerHTML = "<p class='text-gray-400'>No orders in delivery yet.</p>";
-                    return;
-                }
-                const orders = [];
-                snapshot.forEach(doc => {
-                    orders.push({ id: doc.id, ...doc.data() });
-                });
-                orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                let output = "";
-                orders.forEach(order => {
-                    if (order.status === "being_delivered") {
-                        const items = order.items.map(item => `${item.quantity}x ${item.name}`).join(", ");
-                        const subtotal = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-                        const deliveryDetails = order.deliveryDetails || {};
-                        output += `
-                            <div class="order-item">
-                                <p><strong>Items:</strong> ${items}</p>
-                                <p><strong>Location:</strong> ${deliveryDetails.location || "Not provided"}</p>
-                                <p><strong>Contact:</strong> ${deliveryDetails.contactNumber || "Not provided"}</p>
-                                <p><strong>Delivery Note:</strong> ${deliveryDetails.deliveryNotes || "None"}</p>
-                                <p><strong>Total:</strong> GH₵${subtotal.toFixed(2)}</p>
-                                <p><strong>Order ID:</strong> ${order.id}</p>
-                                <p><strong>Time:</strong> ${new Date(order.timestamp).toLocaleString()}</p>
-                                
-                                
-                                <p><strong>Note:</strong> ${order.note || "None"}</p>
-                                
-                                
-                                
-                                <p><strong>Status:</strong> ${order.status}</p>
-                                <div class="flex gap-4 mt-3">
-                                    <button class="btn btn-edit delivered-btn" data-order-id="${order.id}">Mark as Delivered</button>
-                                    <button class="btn btn-secondary not-delivered-btn" data-order-id="${order.id}">Mark as Not Delivered</button>
-                                </div>
-                            </div>
-                        `;
-                    }
-                });
-                deliveryList.innerHTML = output || "<p class='text-gray-400'>No orders in delivery yet.</p>";
-                deliveryList.querySelectorAll(".delivered-btn").forEach(btn => {
-                    btn.addEventListener("click", () => markOrderAsDelivered(btn.dataset.orderId));
-                });
-                deliveryList.querySelectorAll(".not-delivered-btn").forEach(btn => {
-                    btn.addEventListener("click", () => markOrderAsNotDelivered(btn.dataset.orderId));
-                });
-            }, (error) => {
-                showNotification("Error loading delivery orders!", "error");
-                console.error("Error in loadDeliveryOrders:", error);
-                deliveryList.innerHTML = "<p class='text-gray-400'>Error loading delivery orders.</p>";
-            });
-        }
-
-        function loadDeliveredOrders() {
-            const deliveredList = document.getElementById("delivered-list");
-            const q = query(collection(db, "orders"), where("restaurantId", "==", restaurantId));
-            onSnapshot(q, (snapshot) => {
-                if (snapshot.empty) {
-                    deliveredList.innerHTML = "<p class='text-gray-400'>No delivered orders yet.</p>";
-                    return;
-                }
-                const orders = [];
-                snapshot.forEach(doc => {
-                    orders.push({ id: doc.id, ...doc.data() });
-                });
-                orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                let output = "";
-                orders.forEach(order => {
-                    if (order.status === "delivered") {
-                        const items = order.items.map(item => `${item.quantity}x ${item.name}`).join(", ");
-                        const subtotal = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-                        const deliveryDetails = order.deliveryDetails || {};
-                        output += `
-                            <div class="order-item">
-                                <p><strong>Order ID:</strong> ${order.id}</p>
-                                <p><strong>Time:</strong> ${new Date(order.timestamp).toLocaleString()}</p>
-                                <p><strong>Items:</strong> ${items}</p>
-                                <p><strong>Total:</strong> GH₵${subtotal.toFixed(2)}</p>
-                                <p><strong>Note:</strong> ${order.note || "None"}</p>
-                                <p><strong>Location:</strong> ${deliveryDetails.location || "Not provided"}</p>
-                                <p><strong>Delivery Note:</strong> ${deliveryDetails.deliveryNotes || "None"}</p>
-                                <p><strong>Contact:</strong> ${deliveryDetails.contactNumber || "Not provided"}</p>
-                                <p><strong>Status:</strong> ${order.status}</p>
-                            </div>
-                        `;
-                    }
-                });
-                deliveredList.innerHTML = output || "<p class='text-gray-400'>No delivered orders yet.</p>";
-            }, (error) => {
-                showNotification("Error loading delivered orders!", "error");
-                console.error("Error in loadDeliveredOrders:", error);
-                deliveredList.innerHTML = "<p class='text-gray-400'>Error loading delivered orders.</p>";
-            });
-        }
-
-        function loadNotDeliveredOrders() {
-            const notDeliveredList = document.getElementById("not-delivered-list");
-            const q = query(collection(db, "orders"), where("restaurantId", "==", restaurantId));
-            onSnapshot(q, (snapshot) => {
-                if (snapshot.empty) {
-                    notDeliveredList.innerHTML = "<p class='text-gray-400'>No not delivered orders yet.</p>";
-                    return;
-                }
-                const orders = [];
-                snapshot.forEach(doc => {
-                    orders.push({ id: doc.id, ...doc.data() });
-                });
-                orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                let output = "";
-                orders.forEach(order => {
-                    if (order.status === "not_delivered") {
-                        const items = order.items.map(item => `${item.quantity}x ${item.name}`).join(", ");
-                        const subtotal = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-                        const deliveryDetails = order.deliveryDetails || {};
-                        output += `
-                            <div class="order-item">
-                                <p><strong>Order ID:</strong> ${order.id}</p>
-                                <p><strong>Time:</strong> ${new Date(order.timestamp).toLocaleString()}</p>
-                                <p><strong>Items:</strong> ${items}</p>
-                                <p><strong>Total:</strong> GH₵${subtotal.toFixed(2)}</p>
-                                <p><strong>Note:</strong> ${order.note || "None"}</p>
-                                <p><strong>Location:</strong> ${deliveryDetails.location || "Not provided"}</p>
-                                <p><strong>Delivery Note:</strong> ${deliveryDetails.deliveryNotes || "None"}</p>
-                                <p><strong>Contact:</strong> ${deliveryDetails.contactNumber || "Not provided"}</p>
-                                <p><strong>Status:</strong> ${order.status}</p>
-                            </div>
-                        `;
-                    }
-                });
-                notDeliveredList.innerHTML = output || "<p class='text-gray-400'>No not delivered orders yet.</p>";
-            }, (error) => {
-                showNotification("Error loading not delivered orders!", "error");
-                console.error("Error in loadNotDeliveredOrders:", error);
-                notDeliveredList.innerHTML = "<p class='text-gray-400'>Error loading not delivered orders.</p>";
-            });
-        }
-
-        async function markOrderAsBeingDelivered(orderId) {
-            try {
-                const orderRef = doc(db, "orders", orderId);
-                await updateDoc(orderRef, { status: "being_delivered" });
-                showNotification("Order marked as being delivered!");
-            } catch (error) {
-                showNotification("Error updating order status!", "error");
-                console.error("Error in markOrderAsBeingDelivered:", error);
-            }
-        }
-
-        async function markOrderAsDelivered(orderId) {
-            try {
-                const orderRef = doc(db, "orders", orderId);
-                await updateDoc(orderRef, { status: "delivered" });
-                showNotification("Order marked as delivered!");
-            } catch (error) {
-                showNotification("Error updating order status!", "error");
-                console.error("Error in markOrderAsDelivered:", error);
-            }
-        }
-
-        async function markOrderAsNotDelivered(orderId) {
-            try {
-                const orderRef = doc(db, "orders", orderId);
-                await updateDoc(orderRef, { status: "not_delivered" });
-                showNotification("Order marked as not delivered!");
-            } catch (error) {
-                showNotification("Error updating order status!", "error");
-                console.error("Error in markOrderAsNotDelivered:", error);
+                ordersList.innerHTML = "<p class='text-gray-400'>No orders collection found yet. Place an order to start tracking!</p>";
             }
         }
 
@@ -791,19 +563,13 @@
         document.getElementById("manage-store-btn").addEventListener("click", () => toggleSection("manage-store"));
         document.getElementById("manage-menu-btn").addEventListener("click", () => { toggleSection("manage-menu"); loadMenu(); });
         document.getElementById("view-orders-btn").addEventListener("click", () => { toggleSection("view-orders"); loadOrders(); });
-        document.getElementById("delivery-btn").addEventListener("click", () => { toggleSection("delivery"); loadDeliveryOrders(); });
-        document.getElementById("delivered-btn").addEventListener("click", () => { toggleSection("delivered"); loadDeliveredOrders(); });
-        document.getElementById("not-delivered-btn").addEventListener("click", () => { toggleSection("not-delivered"); loadNotDeliveredOrders(); });
+        document.getElementById("delivery-btn").addEventListener("click", () => toggleSection("delivery"));
         document.getElementById("settings-btn").addEventListener("click", () => toggleSection("settings"));
 
         document.addEventListener("DOMContentLoaded", async () => {
             await loadRestaurantData();
             await loadMenu();
-            loadOrders();
-            loadDeliveryOrders();
-            loadDeliveredOrders();
-            loadNotDeliveredOrders();
         });
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'928b4ad6ccb032f9',t:'MTc0MzM3NjM1MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'928b5643d863138e',t:'MTc0MzM3NjgxOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
