@@ -37,35 +37,25 @@ header .container {
 }
 
 .logo {
-    font-size: 24px;
+    font-size: 13px;
     font-weight: 700;
     color: #00c8ff;
     letter-spacing: 0.5px;
+    text-decoration: none; /* Removes underline from the link */
+    display: inline-block; /* Keeps it inline like an h1 */
 }
 
-.nav-menu {
-    display: flex;
-    gap: 30px;
-}
-
-.nav-menu a {
-    color: #fff;
-    text-decoration: none;
-    font-size: 16px;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.nav-menu a:hover {
-    color: #00c8ff;
+.logo h1 {
+    margin: 0; /* Removes default margin */
 }
 
 /* Hamburger Menu */
 .hamburger {
-    display: none;
+    display: flex;
     flex-direction: column;
     gap: 5px;
     cursor: pointer;
+    z-index: 1100; /* Above the nav-menu */
 }
 
 .hamburger span {
@@ -75,40 +65,64 @@ header .container {
     transition: all 0.3s ease;
 }
 
-/* Mobile Menu */
-@media (max-width: 768px) {
-    .hamburger {
-        display: flex;
-    }
+.hamburger.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
 
-    .nav-menu {
-        display: none;
-        position: absolute;
-        top: 60px;
-        left: 0;
-        width: 100%;
-        background: rgba(44, 44, 44, 0.95);
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-        padding: 20px 0;
-    }
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+}
 
-    .nav-menu.active {
-        display: flex;
-    }
+.hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+}
 
-    .hamburger.active span:nth-child(1) {
-        transform: rotate(45deg) translate(5px, 5px);
-    }
+/* Full-Screen Nav Menu */
+.nav-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(44, 44, 44, 0.98);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: translateX(100%);
+    transition: transform 0.5s ease-in-out;
+    z-index: 1000;
+}
 
-    .hamburger.active span:nth-child(2) {
-        opacity: 0;
-    }
+.nav-menu.active {
+    transform: translateX(0);
+}
 
-    .hamburger.active span:nth-child(3) {
-        transform: rotate(-45deg) translate(6px, -6px);
-    }
+.nav-menu ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px; /* Spacious for luxury */
+}
+
+.nav-menu li {
+    position: relative;
+}
+
+.nav-menu a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 28px; /* Bold and prominent */
+    font-weight: 700;
+    letter-spacing: 1px;
+    transition: color 0.3s ease, transform 0.3s ease;
+    display: block;
+}
+
+.nav-menu a:hover {
+    color: #00c8ff;
+    transform: scale(1.05); /* Subtle scale for elegance */
 }
 
 /* Hero Section */

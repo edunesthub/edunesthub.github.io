@@ -11,11 +11,16 @@
     <!-- Header -->
     <header>
         <div class="container">
-            <h1 class="logo">Chawp</h1>
+            <a href="index.html" class="logo">
+                <h1>Chawp</h1>
+            </a>
+            
             <nav class="nav-menu">
-                <a href="#install">Install</a>
-                <a href="#features">Features</a>
-                <a href="#contact">Contact</a>
+                <ul>
+                    <li><a href="#install">Install</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
             </nav>
             <div class="hamburger">
                 <span></span>
@@ -30,7 +35,10 @@
     <div class="container">
         <h2>Crave It. Chawp It.</h2>
         <p>Fast. Delicious. Delivered.</p>
-        <button class="cta-btn">Get Started</button>
+        <button class="cta-btn" onclick="document.getElementById('install').scrollIntoView({ behavior: 'smooth' });">
+            Get Started
+          </button>
+          
     </div>
 </section>
 
@@ -84,9 +92,20 @@
 </footer>
 
 <script>
-    document.querySelector('.hamburger').addEventListener('click', () => {
-        document.querySelector('.nav-menu').classList.toggle('active');
-        document.querySelector('.hamburger').classList.toggle('active');
+    const hamburger = document.querySelector('.hamburger');
+    const navMenu = document.querySelector('.nav-menu');
+    const navLinks = document.querySelectorAll('.nav-menu a');
+
+    hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        navMenu.classList.toggle('active');
+    });
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            hamburger.classList.remove('active');
+            navMenu.classList.remove('active');
+        });
     });
 </script>
 </body>
