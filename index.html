@@ -84,6 +84,19 @@
     </div>
 </section>
 
+<!-- Contact Section -->
+<section id="contact" class="contact">
+    <div class="container">
+        <h2>Contact Us</h2>
+        <form class="contact-form" id="contactForm">
+            <input type="text" id="name" placeholder="Name" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <textarea id="message" placeholder="Message" rows="5" required></textarea>
+            <button type="submit" class="cta-btn">Send</button>
+        </form>
+    </div>
+</section>
+
 <!-- Footer -->
 <footer>
     <div class="container">
@@ -107,6 +120,20 @@
             navMenu.classList.remove('active');
         });
     });
+
+    const form = document.getElementById('contactForm');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+            const whatsappNumber = '+233593117766';
+            const whatsappMessage = `Name: ${name}\nEmail: ${email}\nMessage: ${message}`;
+            const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+            window.open(whatsappURL, '_blank');
+            form.reset(); // Clear the form after submission
+        });
+        
 </script>
 </body>
 </html>
